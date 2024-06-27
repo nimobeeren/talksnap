@@ -1,33 +1,124 @@
 import OpenAI from "openai";
 import { useEffect, useState } from "react";
 import { Button } from "./components/ui/button";
+import { Textarea } from "./components/ui/textarea";
 
-const LIPSUM = `Enim enim eu aliqua aliqua deserunt exercitation minim nulla consectetur. Quis enim et minim enim nulla commodo laborum. In eu aliquip consequat cillum nulla dolor velit ipsum. Eu consectetur consequat laboris consequat qui amet aute magna velit occaecat enim sunt proident duis elit. Sint consectetur nulla ad pariatur tempor aute. Eiusmod ad culpa cupidatat incididunt adipisicing do nostrud irure. Duis et enim cillum qui ex.
-
-Amet id voluptate officia veniam anim cillum. Adipisicing nostrud aliqua pariatur mollit reprehenderit veniam eiusmod mollit officia incididunt esse consectetur amet cupidatat pariatur. Et mollit eu est ut elit voluptate. Est nostrud anim veniam commodo. Occaecat aliqua aute Lorem commodo. Laboris enim occaecat excepteur. Aliquip Lorem sit ut velit ea duis adipisicing Lorem nulla elit id incididunt ullamco magna exercitation.
-
-Dolore dolore reprehenderit dolor anim reprehenderit. Mollit reprehenderit ad mollit eiusmod sit velit dolore sint ullamco excepteur ea. Non pariatur incididunt nulla eu fugiat officia excepteur mollit sit ex. Do culpa irure eiusmod incididunt consequat in cillum et do est sit sunt. Irure incididunt non cillum voluptate labore minim minim. Laborum anim laborum ea magna irure. Ea pariatur dolor magna irure aute pariatur ullamco pariatur laborum dolor ut nulla sit ipsum adipisicing.
-
-Est cillum qui amet ex ad voluptate cillum magna cillum cupidatat. Nisi sit aute officia consectetur deserunt officia. Reprehenderit aliquip aliqua cillum deserunt ipsum et esse eiusmod velit anim occaecat. Nulla adipisicing laborum sunt.
-
-In duis laborum ad veniam pariatur. Sit cupidatat pariatur sunt incididunt tempor ex aliquip exercitation adipisicing nulla voluptate. Id ipsum laboris enim consectetur id ullamco ad mollit enim ut minim magna aliquip magna in. Esse Lorem mollit aliqua nisi aliqua cupidatat anim enim quis nisi laborum. Elit fugiat duis est sit aliquip consectetur irure.
-
-Adipisicing aliqua sit nulla ad ullamco culpa aute. Minim magna laborum amet eu et ex laborum nostrud culpa est. Proident fugiat et tempor labore aliqua commodo tempor. Minim ad exercitation laboris enim cupidatat quis fugiat sint officia ex in sit adipisicing sint.
-
-Occaecat mollit eiusmod proident consequat irure elit excepteur et. Deserunt veniam amet ea proident ex laboris elit deserunt incididunt pariatur voluptate voluptate ullamco proident nostrud. Veniam adipisicing cillum tempor duis sint amet anim elit. Consectetur sit consectetur do et et officia do irure.
-
-Amet amet labore commodo amet id ea ea amet aute incididunt mollit voluptate mollit quis excepteur. Incididunt officia pariatur dolor nostrud qui magna exercitation commodo esse cillum mollit deserunt consequat amet in. Fugiat ex excepteur ea velit sint incididunt enim elit est occaecat laboris mollit commodo duis ipsum. Deserunt velit fugiat reprehenderit deserunt consectetur excepteur. Eiusmod amet adipisicing cupidatat laboris voluptate adipisicing proident aliqua ullamco. Laboris fugiat labore ea labore officia dolore. Incididunt magna laboris amet nostrud magna aliqua mollit.`;
+const EXAMPLE_TRANSCRIPT = `a few logistical things one I'm I'm
+carrying a magic Trackpad because
+everyone has clickers what if we had
+multiple Dimensions so we're going to
+experiment with this
+today and uh and two I'm also I'm using
+like AI like fancy new everything right
+like so this is to um and we're going to
+go two dimensional with our uh slides as
+well so I'm here to talk about the AI
+engineer you're all here because you
+believe that there's some value to this
+idea um and then I just put like a
+ridiculous 1,000x on this um but I do
+think there is some meaning towards
+thinking about highers higher orders of
+magnitude towards raising your Ambitions
+and that's what I would like all of you
+to do today and to do with your friends
+back
+home so um and obviously a lot of AI
+generated art because I mean it's an AI
+conference we got to do got do that um
+first of all I want to congratulate you
+on being here um not just I'm not
+talking about here location wise
+physically I'm talking about here in
+terms of the point in time uh imagine if
+you were a mathematician when was the
+best time to be born uh I I will propose
+uh around about 600 AD this dude Brahma
+Gupta he invented zero pretty pretty
+pretty novel invention that took us only
+4,000 years to do that um but there's
+there's there's certain times where like
+if you're in that field you you have to
+be there that's the thing if you're
+alive during that time you have to be
+doing that thing uh physics when was the
+best time to be born there's the right
+answer 1905 1927 um and this conference
+kind of is um inspired by the solv
+conference um that's Albert Einstein M
+curri and A lot of people that you just
+saw in the opener
+movie um same thing if you if you made
+cars there's the right time 1900 to 1930
+if you made personal Computing products
+1980
+2010 uh if you ever get this like if
+you're a millennial if you're very
+online you ever get these memes like
+you're born to late explore the earth
+born too early to explore the stars um
+you're not too
+late we are here uh this is based on
+demographics and history the approximate
+timeline of all Humanity um we know that
+we're roughly about 73% of all
+concurrent intelligences if we don't
+expand our own intelligences or go to
+other
+planets um so my argument my message to
+you today is that you are just in time
+and the timing is right to
+1x um I think a lot a lot of my
+`;
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
-const SpeechGrammarList =
-  window.SpeechGrammarList || window.webkitSpeechGrammarList;
-const SpeechRecognitionEvent =
-  window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
+
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
+});
+
+async function getLastTalkingPoint(transcription) {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: "system",
+        content: `You are an AI whose purpose is to capture highlights from conference talks. Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant segment of the transcript VERBATIM, then summarize that segment in a single short sentence.
+      
+        Your answer must be in the following JSON format:
+        {"segment": <SEGMENT>, "summary": <SUMMARY>}
+        `,
+      },
+      {
+        role: "user",
+        content: `Transcript: ${transcription}`,
+      },
+    ],
+  });
+
+  let parsedResult = null;
+  try {
+    console.log(completion.choices[0].message.content);
+    parsedResult = JSON.parse(completion.choices[0].message.content);
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      throw new Error(
+        `Invalid response format. Expected JSON object but got: '${completion.choices[0].message.content}'`,
+        { cause: err },
+      );
+    }
+    throw err;
+  }
+
+  console.log(parsedResult);
+}
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcription, setTranscription] = useState(LIPSUM);
+  const [transcription, setTranscription] = useState(EXAMPLE_TRANSCRIPT);
 
   // While transcribing, listen for speech and update the transcription state
   useEffect(() => {
@@ -74,62 +165,33 @@ function App() {
     };
   }, [isTranscribing]);
 
-  // While transcribing, add a random word to the transcription every second
-  // useEffect(() => {
-  //   let intervalId = null;
-
-  //   const startTranscribing = () => {
-  //     intervalId = setInterval(() => {
-  //       const randomWord = Math.random().toString(36).substring(2);
-  //       setTranscription((prev) => `${prev} ${randomWord}`);
-  //     }, 1000);
-  //   };
-
-  //   const stopTranscribing = () => {
-  //     if (intervalId) {
-  //       clearInterval(intervalId);
-  //       intervalId = null;
-  //     }
-  //   };
-
-  //   if (isTranscribing) {
-  //     startTranscribing();
-  //   } else {
-  //     stopTranscribing();
-  //   }
-
-  //   return () => {
-  //     stopTranscribing();
-  //   };
-  // }, [isTranscribing]);
-
   return (
     <div className="flex max-h-screen min-h-screen w-full flex-col items-center bg-background p-16 pb-0">
-      <div className="mb-8 flex grow gap-16 overflow-y-auto">
-        <p className="w-1/2">{transcription}</p>
+      <div className="mb-8 flex w-full grow gap-16 overflow-y-auto">
+        <Textarea
+          className="w-1/2"
+          value={transcription}
+          onChange={(event) => setTranscription(event.currentTarget.value)}
+        />
         <p className="w-1/2">Highlights</p>
       </div>
-      <div className="flex w-full justify-center gap-2 border-t-2 border-gray-300 p-8">
+      <div className="flex w-full justify-center gap-4 border-t-2 border-gray-300 p-8">
         <Button
           onClick={() => setIsTranscribing((prev) => !prev)}
-          className="bg-primary"
         >
           {isTranscribing ? "Stop Transcription" : "Start Transcription"}
         </Button>
         <Button
           onClick={async () => {
-            const openai = new OpenAI({
-              apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-              dangerouslyAllowBrowser: true,
-            });
-            const completion = await openai.chat.completions.create({
-              messages: [{ role: "user", content: "Hello there!" }],
-              model: "gpt-3.5-turbo",
-            });
-            console.log(completion.choices[0].message);
+            let point;
+            try {
+              point = await getLastTalkingPoint(transcription);
+            } catch (err) {
+              console.error(err);
+            }
           }}
         >
-          Test API
+          Highlight
         </Button>
       </div>
     </div>
