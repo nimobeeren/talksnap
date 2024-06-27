@@ -1,3 +1,4 @@
+import OpenAI from "openai";
 import { useEffect, useState } from "react";
 import { Button } from "./components/ui/button";
 
@@ -108,12 +109,27 @@ function App() {
         <p className="w-1/2">{transcription}</p>
         <p className="w-1/2">Highlights</p>
       </div>
-      <div className="flex w-full justify-center border-t-2 border-gray-300 p-8">
+      <div className="flex w-full justify-center gap-2 border-t-2 border-gray-300 p-8">
         <Button
           onClick={() => setIsTranscribing((prev) => !prev)}
           className="bg-primary"
         >
           {isTranscribing ? "Stop Transcription" : "Start Transcription"}
+        </Button>
+        <Button
+          onClick={async () => {
+            const openai = new OpenAI({
+              apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+              dangerouslyAllowBrowser: true,
+            });
+            const completion = await openai.chat.completions.create({
+              messages: [{ role: "user", content: "Hello there!" }],
+              model: "gpt-3.5-turbo",
+            });
+            console.log(completion.choices[0].message);
+          }}
+        >
+          Test API
         </Button>
       </div>
     </div>
