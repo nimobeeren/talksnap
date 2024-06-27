@@ -79,7 +79,7 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 });
 
-async function getLastTalkingPoint(transcription) {
+async function getLastTalkingPoint(transcript) {
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     response_format: { type: "json_object" },
@@ -94,7 +94,7 @@ async function getLastTalkingPoint(transcription) {
       },
       {
         role: "user",
-        content: `Transcript: ${transcription}`,
+        content: `Transcript: ${transcript}`,
       },
     ],
   });
@@ -118,7 +118,7 @@ async function getLastTalkingPoint(transcription) {
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcription, setTranscription] = useState(EXAMPLE_TRANSCRIPT);
+  const [transcript, setTranscript] = useState(EXAMPLE_TRANSCRIPT);
 
   // While transcribing, listen for speech and update the transcription state
   useEffect(() => {
@@ -134,7 +134,7 @@ function App() {
         }
         fullTranscript += event.results[i][0].transcript;
       }
-      setTranscription(fullTranscript);
+      setTranscript(fullTranscript);
     };
 
     const startTranscription = () => {
@@ -170,8 +170,8 @@ function App() {
       <div className="mb-8 flex w-full grow gap-16 overflow-y-auto">
         <Textarea
           className="w-1/2"
-          value={transcription}
-          onChange={(event) => setTranscription(event.currentTarget.value)}
+          value={transcript}
+          onChange={(event) => setTranscript(event.currentTarget.value)}
         />
         <p className="w-1/2">Highlights</p>
       </div>
@@ -185,7 +185,7 @@ function App() {
           onClick={async () => {
             let point;
             try {
-              point = await getLastTalkingPoint(transcription);
+              point = await getLastTalkingPoint(transcript);
             } catch (err) {
               console.error(err);
             }
