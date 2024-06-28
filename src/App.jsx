@@ -116,7 +116,7 @@ async function getLastTalkingPoint(transcript) {
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcriptionResults, setTranscriptionResults] = useState("");
+  const [transcriptionResults, setTranscriptionResults] = useState(null);
   const [highlights, setHighlights] = useState([]);
 
   // While transcribing, listen for speech and update the transcription state
@@ -124,15 +124,15 @@ function App() {
     let recognition = null;
 
     const handleTranscriptionResult = (event) => {
-      console.log(event.results);
       setTranscriptionResults(event.results);
     };
 
     const startTranscription = () => {
+      setTranscriptionResults(null);
       recognition = new SpeechRecognition();
       recognition.lang = "en-US";
       recognition.continuous = true;
-      recognition.interimResults = false;
+      recognition.interimResults = true;
       recognition.addEventListener("result", handleTranscriptionResult);
       recognition.start();
     };
@@ -160,8 +160,13 @@ function App() {
     <div className="flex max-h-screen min-h-screen w-full flex-col items-center bg-background p-16 pb-0">
       <div className="mb-8 flex w-full grow gap-16 overflow-y-auto">
         <div className="w-1/2">
-          {Array.from(transcriptionResults).map((result, index) => (
-            <p key={index}>{result[0].transcript}</p>
+          {Array.from(transcriptionResults || []).map((result, index) => (
+            <span
+              key={`${index}-${result.isFinal}`}
+              className={result.isFinal ? undefined : "text-gray-500"}
+            >
+              {result[0].transcript}
+            </span>
           ))}
         </div>
         <ul className="w-1/2">
@@ -176,10 +181,10 @@ function App() {
         </Button>
         <Button
           onClick={async () => {
-            const fullTranscript = Array.from(transcriptionResults)
+            const fullTranscript = Array.from(transcriptionResults || [])
               .map((result) => result[0].transcript)
-              .join("\n");
-              
+              .join("");
+
             let point;
             try {
               point = await getLastTalkingPoint(fullTranscript);
@@ -188,7 +193,6 @@ function App() {
               return;
             }
 
-            console.log("New highlight: ", point);
             setHighlights((prev) => [...prev, point]);
           }}
         >
