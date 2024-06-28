@@ -196,7 +196,7 @@ function App() {
             setHighlights((prev) => [...prev, point]);
           }}
         >
-          Highlight
+          Snap!
         </Button>
       </div>
     </div>
