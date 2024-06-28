@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { useEffect, useState } from "react";
 import { Button } from "./components/ui/button";
-import { Textarea } from "./components/ui/textarea";
 
 const EXAMPLE_TRANSCRIPT = `a few logistical things one I'm I'm
 carrying a magic Trackpad because
@@ -101,7 +100,6 @@ async function getLastTalkingPoint(transcript) {
 
   let parsedResult = null;
   try {
-    console.log(completion.choices[0].message.content);
     parsedResult = JSON.parse(completion.choices[0].message.content);
   } catch (err) {
     if (err instanceof SyntaxError) {
@@ -113,12 +111,13 @@ async function getLastTalkingPoint(transcript) {
     throw err;
   }
 
-  console.log(parsedResult);
+  return parsedResult;
 }
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcript, setTranscript] = useState(EXAMPLE_TRANSCRIPT);
+  const [transcriptionResults, setTranscriptionResults] = useState("");
+  const [highlights, setHighlights] = useState([]);
 
   // While transcribing, listen for speech and update the transcription state
   useEffect(() => {
@@ -126,15 +125,7 @@ function App() {
 
     const handleTranscriptionResult = (event) => {
       console.log(event.results);
-
-      let fullTranscript = "";
-      for (let i = 0; i < event.results.length; i++) {
-        if (fullTranscript !== "") {
-          fullTranscript += ". ";
-        }
-        fullTranscript += event.results[i][0].transcript;
-      }
-      setTranscript(fullTranscript);
+      setTranscriptionResults(event.results);
     };
 
     const startTranscription = () => {
@@ -168,27 +159,37 @@ function App() {
   return (
     <div className="flex max-h-screen min-h-screen w-full flex-col items-center bg-background p-16 pb-0">
       <div className="mb-8 flex w-full grow gap-16 overflow-y-auto">
-        <Textarea
-          className="w-1/2"
-          value={transcript}
-          onChange={(event) => setTranscript(event.currentTarget.value)}
-        />
-        <p className="w-1/2">Highlights</p>
+        <div className="w-1/2">
+          {Array.from(transcriptionResults).map((result, index) => (
+            <p key={index}>{result[0].transcript}</p>
+          ))}
+        </div>
+        <ul className="w-1/2">
+          {highlights.map((highlight) => (
+            <li key={highlight.summary}>{highlight.summary}</li>
+          ))}
+        </ul>
       </div>
       <div className="flex w-full justify-center gap-4 border-t-2 border-gray-300 p-8">
-        <Button
-          onClick={() => setIsTranscribing((prev) => !prev)}
-        >
+        <Button onClick={() => setIsTranscribing((prev) => !prev)}>
           {isTranscribing ? "Stop Transcription" : "Start Transcription"}
         </Button>
         <Button
           onClick={async () => {
+            const fullTranscript = Array.from(transcriptionResults)
+              .map((result) => result[0].transcript)
+              .join("\n");
+              
             let point;
             try {
-              point = await getLastTalkingPoint(transcript);
+              point = await getLastTalkingPoint(fullTranscript);
             } catch (err) {
               console.error(err);
+              return;
             }
+
+            console.log("New highlight: ", point);
+            setHighlights((prev) => [...prev, point]);
           }}
         >
           Highlight
