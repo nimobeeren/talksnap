@@ -60,4 +60,26 @@ describe("splitTranscript", () => {
       { isHighlight: false, value: " applications" },
     ]);
   });
+
+  test("returns the correct segments when highlight is at the start", () => {
+    const transcript = "This is a test transcript";
+    const highlights = ["This"];
+    const result = splitTranscript(transcript, highlights);
+    expect(result).toEqual([
+      { isHighlight: true, value: "This" },
+      { isHighlight: false, value: " is a test transcript" },
+    ]);
+  });
+
+  test("returns the correct segments when highlights are touching", () => {
+    const transcript = "abcd";
+    const highlights = ["b", "c"];
+    const result = splitTranscript(transcript, highlights);
+    expect(result).toEqual([
+      { isHighlight: false, value: "a" },
+      { isHighlight: true, value: "b" },
+      { isHighlight: true, value: "c" },
+      { isHighlight: false, value: "d" },
+    ]);
+  });
 });

@@ -24,10 +24,12 @@ export function splitTranscript(transcript, highlights) {
   for (const highlight of highlights) {
     const pos = findFuzzySubstringPos(transcript, highlight);
     if (pos) {
-      segments.push({
-        isHighlight: false,
-        value: transcript.slice(lastPos, pos[0]),
-      });
+      if (pos[0] > lastPos) {
+        segments.push({
+          isHighlight: false,
+          value: transcript.slice(lastPos, pos[0]),
+        });
+      }
       segments.push({
         isHighlight: true,
         value: transcript.slice(pos[0], pos[1]),
