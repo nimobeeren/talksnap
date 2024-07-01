@@ -1,46 +1,55 @@
-/** Finds the position of a string pattern in a source text.
- *
+/**
+ * Finds the best matching position of a string pattern in a source text.
  * @returns A tuple consisting of the start and end (exclusive) positions.
  */
-export function findFuzzySubstringPos(source, pattern) {
+export function findBestSubstringMatch(source, pattern) {
   const normalize = (text) => text.toLowerCase();
 
   // TODO: deal with punctuation differences
 
   for (let i = source.length; i >= 0; i--) {
-    if (normalize(source.slice(i, i + pattern.length)) === normalize(pattern)) {
-      return [i, i + pattern.length];
+    const sourceSubstring = source.slice(i, i + pattern.length);
+    if (normalize(sourceSubstring) === normalize(pattern)) {
+      return {
+        text: sourceSubstring,
+        start: i,
+        end: i + pattern.length,
+      };
     }
   }
 
   return null;
 }
 
-/** Splits a transcript into a sequence of segments which are a highlight or not. */
+/**
+ * Splits a transcript into a sequence of segments which are a highlight or not.
+ */
 export function splitTranscript(transcript, highlights) {
   const segments = [];
   let lastPos = 0;
 
   for (const highlight of highlights) {
-    const pos = findFuzzySubstringPos(transcript, highlight);
-    if (pos) {
-      if (pos[0] > lastPos) {
+    const match = findBestSubstringMatch(transcript, highlight.text);
+    if (match) {
+      if (match.start > lastPos) {
         segments.push({
           isHighlight: false,
-          value: transcript.slice(lastPos, pos[0]),
+          text: transcript.slice(lastPos, match.start),
         });
       }
       segments.push({
         isHighlight: true,
-        value: transcript.slice(pos[0], pos[1]),
+        text: match.text,
+        summary: highlight.summary,
       });
-      lastPos = pos[1];
+      lastPos = match.end;
     } else {
-      console.warn("Highlight not found in transcript:", highlight);
+      console.warn("Highlight not found in transcript:", highlight.text);
     }
   }
 
-  segments.push({ isHighlight: false, value: transcript.slice(lastPos) });
+  // FIXME
+  segments.push({ isHighlight: false, text: transcript.slice(lastPos) });
 
   return segments;
 }
