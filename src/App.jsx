@@ -3,9 +3,6 @@ import { useEffect, useState } from "react";
 import { getLastTalkingPoint } from "./ai";
 import { Button } from "./components/ui/button";
 
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-
 const EXAMPLE_TRANSCRIPTION_RESULTS = [
   [
     {
@@ -80,41 +77,43 @@ and the timing is right to
   ],
 ];
 
-function App() {
-  const [isTranscribing, setIsTranscribing] = useState(false);
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const speechRecognition = new SpeechRecognition();
+speechRecognition.lang = "en-US";
+speechRecognition.continuous = true;
+speechRecognition.interimResults = true;
+
+function useSpeechRecognition(speechRecognition, enabled) {
   // const [transcriptionResults, setTranscriptionResults] = useState(null);
   const [transcriptionResults, setTranscriptionResults] = useState(
     EXAMPLE_TRANSCRIPTION_RESULTS,
   );
-  const [highlights, setHighlights] = useState([]);
 
   // While transcribing, listen for speech and update the transcription state
   useEffect(() => {
-    let recognition = null;
-
     const handleTranscriptionResult = (event) => {
       setTranscriptionResults(event.results);
     };
 
     const startTranscription = () => {
       setTranscriptionResults(null);
-      recognition = new SpeechRecognition();
-      recognition.lang = "en-US";
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.addEventListener("result", handleTranscriptionResult);
-      recognition.start();
+      speechRecognition.addEventListener("result", handleTranscriptionResult);
+      speechRecognition.start();
     };
 
     const stopTranscription = () => {
-      if (recognition) {
-        recognition.removeEventListener("result", handleTranscriptionResult);
-        recognition.stop();
-        recognition = null;
+      if (speechRecognition) {
+        speechRecognition.removeEventListener(
+          "result",
+          handleTranscriptionResult,
+        );
+        speechRecognition.stop();
       }
     };
 
-    if (isTranscribing) {
+    if (enabled) {
       startTranscription();
     } else {
       stopTranscription();
@@ -123,10 +122,22 @@ function App() {
     return () => {
       stopTranscription();
     };
-  }, [isTranscribing]);
+  }, [speechRecognition, enabled]);
+
+  return transcriptionResults;
+}
+
+function App() {
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [highlights, setHighlights] = useState([]);
+
+  const transcriptionResults = useSpeechRecognition(
+    speechRecognition,
+    isTranscribing,
+  );
 
   return (
-    <div className="flex max-h-screen min-h-screen w-full flex-col items-center bg-background p-16 pb-0">
+    <div className="flex max-h-screen min-h-screen w-full flex-col items-center bg-background bg-black p-16 pb-0">
       <div className="mb-8 flex w-full grow gap-16 overflow-y-auto">
         <div className="w-1/2 whitespace-pre-wrap">
           {Array.from(transcriptionResults || []).map((result, index) => (
@@ -150,13 +161,13 @@ function App() {
         </Button>
         <Button
           onClick={async () => {
-            const fullTranscript = Array.from(transcriptionResults || [])
+            const transcript = Array.from(transcriptionResults || [])
               .map((result) => result[0].transcript)
               .join("");
 
             let point;
             try {
-              point = await getLastTalkingPoint(fullTranscript);
+              point = await getLastTalkingPoint(transcript);
             } catch (err) {
               console.error(err);
               return;

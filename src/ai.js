@@ -13,10 +13,10 @@ export async function getLastTalkingPoint(transcript) {
       {
         role: "system",
 
-        content: `You are an AI whose purpose is to capture highlights from conference talks. Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant segment of the transcript VERBATIM, then summarize the point in a single short sentence. It's okay to use more context than what's included in the verbatim segment.
+        content: `You are an AI whose purpose is to capture highlights from conference talks. Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant text of the transcript VERBATIM, then summarize the point in a single short sentence. It's okay to use more context than what's included in the verbatim text.
         
         Your answer must be in the following JSON format:
-        {"segment": <SEGMENT>, "summary": <SUMMARY>}
+        {"text": <TEXT>, "summary": <SUMMARY>}
         `,
       },
       {
