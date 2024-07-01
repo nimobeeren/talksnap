@@ -66,11 +66,21 @@ describe("splitTranscript", () => {
 
   test("returns the correct segments when highlight is at the start", () => {
     const transcript = "This is a test transcript";
-    const highlights = [{ text: "This", summary: "this" }];
+    const highlights = [{ text: "this", summary: "this" }];
     const segments = splitTranscript(transcript, highlights);
     expect(segments).toEqual([
       { isHighlight: true, text: "This", summary: "this" },
       { isHighlight: false, text: " is a test transcript" },
+    ]);
+  });
+
+  test("returns the correct segments when highlight is at the end", () => {
+    const transcript = "This is a test transcript";
+    const highlights = [{ text: "transcript", summary: "transcript" }];
+    const segments = splitTranscript(transcript, highlights);
+    expect(segments).toEqual([
+      { isHighlight: false, text: "This is a test " },
+      { isHighlight: true, text: "transcript", summary: "transcript" },
     ]);
   });
 

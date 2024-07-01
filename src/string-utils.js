@@ -48,8 +48,9 @@ export function splitTranscript(transcript, highlights) {
     }
   }
 
-  // FIXME
-  segments.push({ isHighlight: false, text: transcript.slice(lastPos) });
+  if (lastPos < transcript.length) {
+    segments.push({ isHighlight: false, text: transcript.slice(lastPos) });
+  }
 
   return segments;
 }
