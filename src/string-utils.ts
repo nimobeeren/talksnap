@@ -1,9 +1,20 @@
+import type { Segment } from "./types";
+
+interface Match {
+  text: string;
+  start: number;
+  end: number;
+}
+
 /**
- * Finds the best matching position of a string pattern in a source text.
- * @returns A tuple consisting of the start and end (exclusive) positions.
+ * Finds the substring which best matches a pattern in a source string.
+ * @returns the substring taken from the source and its start (inclusive) and end (exclusive) indices.
  */
-export function findBestSubstringMatch(source, pattern) {
-  const normalize = (text) => text.toLowerCase();
+export function findBestSubstringMatch(
+  source: string,
+  pattern: string,
+): Match | null {
+  const normalize = (text: string) => text.toLowerCase();
 
   // TODO: deal with punctuation differences
 
@@ -24,8 +35,11 @@ export function findBestSubstringMatch(source, pattern) {
 /**
  * Splits a transcript into a sequence of segments which are a highlight or not.
  */
-export function splitTranscript(transcript, highlights) {
-  const segments = [];
+export function splitTranscript(
+  transcript: string,
+  highlights: Array<{ text: string, summary?: string }>,
+): Segment[] {
+  const segments: Segment[] = [];
   let lastPos = 0;
 
   for (const highlight of highlights) {

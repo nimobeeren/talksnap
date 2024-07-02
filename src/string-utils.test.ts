@@ -40,7 +40,7 @@ describe("findBestSubstringMatch", () => {
 describe("splitTranscript", () => {
   test("returns the correct segments without highlights", () => {
     const transcript = "This is a test transcript";
-    const highlights = [];
+    const highlights: any[] = [];
     const match = splitTranscript(transcript, highlights);
     expect(match).toEqual([
       { isHighlight: false, text: "This is a test transcript" },

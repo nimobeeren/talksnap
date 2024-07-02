@@ -1,11 +1,12 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({
+  // @ts-ignore
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true,
 });
 
-export async function highlightLastTalkingPoint(transcript) {
+export async function highlightLastTalkingPoint(transcript: string) {
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     response_format: { type: "json_object" },
@@ -28,11 +29,13 @@ export async function highlightLastTalkingPoint(transcript) {
 
   let parsedResult = null;
   try {
+    // @ts-ignore
     parsedResult = JSON.parse(completion.choices[0].message.content);
   } catch (err) {
     if (err instanceof SyntaxError) {
       throw new Error(
         `Invalid response format. Expected JSON object but got: '${completion.choices[0].message.content}'`,
+        // @ts-ignore
         { cause: err },
       );
     }
@@ -42,7 +45,7 @@ export async function highlightLastTalkingPoint(transcript) {
   return parsedResult;
 }
 
-export async function MOCK_highlightLastTalkingPoint(transcript) {
+export async function MOCK_highlightLastTalkingPoint(transcript: string) {
   return {
     text: `my message to
 you today is that you are just in time

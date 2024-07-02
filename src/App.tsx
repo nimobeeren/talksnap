@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MOCK_highlightLastTalkingPoint } from "./ai";
 import { Button } from "./components/ui/button";
 import { splitTranscript } from "./string-utils";
+import { Segment } from "./types";
 
 const MOCK_TRANSCRIPTION_RESULTS = [
   [
@@ -80,6 +81,7 @@ and the timing is right to
 ];
 
 const SpeechRecognition =
+  // @ts-ignore
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
 const speechRecognition = new SpeechRecognition();
@@ -87,15 +89,15 @@ speechRecognition.lang = "en-US";
 speechRecognition.continuous = true;
 speechRecognition.interimResults = true;
 
-function useSpeechRecognition(speechRecognition, enabled) {
+function useSpeechRecognition(speechRecognition: any, enabled: boolean) {
   // const [transcriptionResults, setTranscriptionResults] = useState(null);
-  const [transcriptionResults, setTranscriptionResults] = useState(
+  const [transcriptionResults, setTranscriptionResults] = useState<any>(
     MOCK_TRANSCRIPTION_RESULTS,
   );
 
   // While transcribing, listen for speech and update the transcription state
   useEffect(() => {
-    const handleTranscriptionResult = (event) => {
+    const handleTranscriptionResult = (event: any) => {
       setTranscriptionResults(event.results);
     };
 
@@ -138,15 +140,15 @@ function App() {
   );
 
   const transcript = Array.from(transcriptionResults || [])
-    .filter((result) => result[0].isFinal)
-    .map((result) => result[0].transcript)
+    .filter((result: any) => result[0].isFinal)
+    .map((result: any) => result[0].transcript)
     .join("");
   const tentativeTranscript = Array.from(transcriptionResults || [])
-    .filter((result) => !result[0].isFinal)
-    .map((result) => result[0].transcript)
+    .filter((result: any) => !result[0].isFinal)
+    .map((result: any) => result[0].transcript)
     .join("");
 
-  const [transcriptSegments, setTranscriptSegments] = useState([
+  const [transcriptSegments, setTranscriptSegments] = useState<Segment[]>([
     // Initially, there is just a single segment which is not a highlight
     { isHighlight: false, text: transcript },
   ]);
