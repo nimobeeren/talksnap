@@ -1,3 +1,5 @@
+import { Highlight } from "./types";
+
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -6,7 +8,9 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 });
 
-export async function highlightLastTalkingPoint(transcript: string) {
+export async function highlightLastTalkingPoint(
+  transcript: string,
+): Promise<Highlight> {
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     response_format: { type: "json_object" },
@@ -45,12 +49,14 @@ export async function highlightLastTalkingPoint(transcript: string) {
   return parsedResult;
 }
 
-export async function MOCK_highlightLastTalkingPoint(transcript: string) {
+export async function MOCK_highlightLastTalkingPoint(
+  transcript: string,
+): Promise<Highlight> {
   return {
     text: `my message to
 you today is that you are just in time
 and the timing is right to
 1x`,
-    summary: "it's time to build!"
-  }
+    summary: "it's time to build!",
+  };
 }

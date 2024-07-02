@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
 import { MOCK_highlightLastTalkingPoint } from "./ai";
+import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
-import { splitTranscript } from "./string-utils";
-import { Segment } from "./types";
+import { Highlight } from "./types";
 
 const MOCK_TRANSCRIPTION_RESULTS = [
   [
@@ -89,7 +89,7 @@ speechRecognition.lang = "en-US";
 speechRecognition.continuous = true;
 speechRecognition.interimResults = true;
 
-function useSpeechRecognition(speechRecognition: any, enabled: boolean) {
+function useSpeechRecognition(speechRecognition: any, enabled: boolean): any[] {
   // const [transcriptionResults, setTranscriptionResults] = useState(null);
   const [transcriptionResults, setTranscriptionResults] = useState<any>(
     MOCK_TRANSCRIPTION_RESULTS,
@@ -133,48 +133,20 @@ function useSpeechRecognition(speechRecognition: any, enabled: boolean) {
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
 
   const transcriptionResults = useSpeechRecognition(
     speechRecognition,
     isTranscribing,
   );
 
-  const transcript = Array.from(transcriptionResults || [])
-    .filter((result: any) => result[0].isFinal)
-    .map((result: any) => result[0].transcript)
-    .join("");
-  const tentativeTranscript = Array.from(transcriptionResults || [])
-    .filter((result: any) => !result[0].isFinal)
-    .map((result: any) => result[0].transcript)
-    .join("");
-
-  const [transcriptSegments, setTranscriptSegments] = useState<Segment[]>([
-    // Initially, there is just a single segment which is not a highlight
-    { isHighlight: false, text: transcript },
-  ]);
-
-  const highlights = transcriptSegments.filter(
-    (segment) => segment.isHighlight,
-  );
-
   return (
     <div className="flex max-h-screen min-h-screen w-full flex-col items-center bg-background bg-black p-16 pb-0">
       <div className="mb-8 flex w-full grow gap-16 overflow-y-auto">
-        <div className="w-1/2 whitespace-pre-wrap">
-          <>
-            {transcriptSegments.map((segment, index) => (
-              <span
-                key={index}
-                className={
-                  segment.isHighlight ? "text-red-300" : "text-gray-300"
-                }
-              >
-                {segment.text}
-              </span>
-            ))}
-          </>
-          <span className="text-gray-500">{tentativeTranscript}</span>
-        </div>
+        <Transcript
+          transcriptionResults={transcriptionResults}
+          highlights={highlights}
+        />
         <ul className="w-1/2">
           {highlights.map((highlight) => (
             <li key={highlight.summary}>{highlight.summary}</li>
@@ -187,20 +159,24 @@ function App() {
         </Button>
         <Button
           onClick={async () => {
-            let highlight;
+            const chunks = Array.from(transcriptionResults).map(
+              (result) => result[0],
+            );
+            const transcript = chunks
+              .filter((result: any) => result.isFinal)
+              .map((result: any) => result.transcript)
+              .join("");
+
+            let newHighlight;
             try {
               // highlight = await highlightLastTalkingPoint(transcript);
-              highlight = await MOCK_highlightLastTalkingPoint(transcript);
+              newHighlight = await MOCK_highlightLastTalkingPoint(transcript);
             } catch (err) {
               console.error(err);
               return;
             }
 
-            const segments = splitTranscript(transcript, [
-              ...highlights,
-              highlight,
-            ]);
-            setTranscriptSegments(segments);
+            setHighlights((prev) => [...prev, newHighlight]);
           }}
         >
           Snap!

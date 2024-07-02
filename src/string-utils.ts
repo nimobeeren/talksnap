@@ -1,4 +1,4 @@
-import type { Segment } from "./types";
+import type { Highlight, Segment } from "./types";
 
 interface Match {
   text: string;
@@ -37,7 +37,7 @@ export function findBestSubstringMatch(
  */
 export function splitTranscript(
   transcript: string,
-  highlights: Array<{ text: string, summary?: string }>,
+  highlights: Array<Highlight>,
 ): Segment[] {
   const segments: Segment[] = [];
   let lastPos = 0;
