@@ -27,13 +27,22 @@ describe("findBestSubstringMatch", () => {
     expect(match).toEqual({ text: "test", start: 10, end: 14 });
   });
 
-  test.skip("returns the correct pos when matching with punctuation and case differences", () => {
+  test("returns the correct pos when matching with whitespace differences", () => {
     const transcript = "This is a\ntest transcript";
     const highlight = "is a test";
 
     const match = findBestSubstringMatch(transcript, highlight);
 
-    expect(match).toEqual({ text: "is a\ntest", start: 10, end: 14 });
+    expect(match).toEqual({ text: "is a\ntest", start: 5, end: 14 });
+  });
+
+  test.skip("returns the correct pos when matching with punctuation differences", () => {
+    const transcript = "This is a test transcript";
+    const highlight = "test transcript.";
+
+    const match = findBestSubstringMatch(transcript, highlight);
+
+    expect(match).toEqual({ text: "test transcript", start: 10, end: 25 });
   });
 });
 

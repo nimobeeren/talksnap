@@ -14,17 +14,28 @@ export function findBestSubstringMatch(
   source: string,
   pattern: string,
 ): Match | null {
-  const normalize = (text: string) => text.toLowerCase();
+  const normalize = (text: string) => {
+    text = text.toLowerCase();
+    // Replace all whitespace characters (including newlines) with spaces.
+    // This is necessary because LLMs often replace newlines with spaces when instructed to repeat
+    // input verbatim.
+    // NOTE: this shouldn't change the total number of characters, because then the start/end
+    // positions will be misaligned.
+    text = text.replaceAll(/\s/g, " ");
+    return text;
+  };
 
-  // TODO: deal with punctuation differences
+  // TODO: deal with subtle differences such as differening punctuation, number of whitespace
+  // characters or spelling. For example, GPT-4o likes to add a period to the end of the output.
 
+  // Find the last occurrence of the substring by traversing backwards
   for (let i = source.length; i >= 0; i--) {
     const sourceSubstring = source.slice(i, i + pattern.length);
     if (normalize(sourceSubstring) === normalize(pattern)) {
       return {
-        text: sourceSubstring,
+        text: sourceSubstring, // return the original substring, not the normalized one
         start: i,
-        end: i + pattern.length,
+        end: i + sourceSubstring.length,
       };
     }
   }

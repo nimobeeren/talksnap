@@ -12,7 +12,7 @@ export async function highlightLastTalkingPoint(
   transcript: string,
 ): Promise<Highlight> {
   const completion = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o",
     response_format: { type: "json_object" },
     messages: [
       {

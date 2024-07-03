@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { MOCK_highlightLastTalkingPoint } from "./ai";
+import { highlightLastTalkingPoint } from "./ai";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
 import { Highlight } from "./types";
@@ -147,7 +147,7 @@ function App() {
           transcriptionResults={transcriptionResults}
           highlights={highlights}
         />
-        <ul className="w-1/2">
+        <ul className="w-1/2 text-gray-400">
           {highlights.map((highlight) => (
             <li key={highlight.summary}>{highlight.summary}</li>
           ))}
@@ -169,8 +169,7 @@ function App() {
 
             let newHighlight;
             try {
-              // highlight = await highlightLastTalkingPoint(transcript);
-              newHighlight = await MOCK_highlightLastTalkingPoint(transcript);
+              newHighlight = await highlightLastTalkingPoint(transcript);
             } catch (err) {
               console.error(err);
               return;
