@@ -1,4 +1,4 @@
-import { Highlight } from "./types";
+import { TalkingPoint } from "./types";
 
 import OpenAI from "openai";
 
@@ -8,9 +8,9 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 });
 
-export async function highlightLastTalkingPoint(
+export async function getLastTalkingPoint(
   transcript: string,
-): Promise<Highlight> {
+): Promise<TalkingPoint> {
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     response_format: { type: "json_object" },
@@ -50,8 +50,9 @@ export async function highlightLastTalkingPoint(
 }
 
 export async function MOCK_highlightLastTalkingPoint(
+  // @ts-expect-error parameter is unused, but want to keep the same call signature
   transcript: string,
-): Promise<Highlight> {
+): Promise<TalkingPoint> {
   return {
     text: `my message to
 you today is that you are just in time

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { highlightLastTalkingPoint } from "./ai";
+import { getLastTalkingPoint } from "./ai";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
-import { Highlight } from "./types";
+import { TalkingPoint } from "./types";
 
 const MOCK_TRANSCRIPTION_RESULTS = [
   [
@@ -133,7 +133,8 @@ function useSpeechRecognition(speechRecognition: any, enabled: boolean): any[] {
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  // Highlights are talking points that the listener wishes to highlight
+  const [highlights, setHighlights] = useState<TalkingPoint[]>([]);
 
   const transcriptionResults = useSpeechRecognition(
     speechRecognition,
@@ -167,15 +168,15 @@ function App() {
               .map((result: any) => result.transcript)
               .join("");
 
-            let newHighlight;
+            let lastTalkingPoint;
             try {
-              newHighlight = await highlightLastTalkingPoint(transcript);
+              lastTalkingPoint = await getLastTalkingPoint(transcript);
             } catch (err) {
               console.error(err);
               return;
             }
 
-            setHighlights((prev) => [...prev, newHighlight]);
+            setHighlights((prev) => [...prev, lastTalkingPoint]);
           }}
         >
           Snap!

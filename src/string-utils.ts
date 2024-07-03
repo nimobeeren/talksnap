@@ -1,4 +1,4 @@
-import type { Highlight, Segment } from "./types";
+import type { TalkingPoint, TranscriptSegment } from "./types";
 
 interface Match {
   text: string;
@@ -48,9 +48,9 @@ export function findBestSubstringMatch(
  */
 export function splitTranscript(
   transcript: string,
-  highlights: Array<Highlight>,
-): Segment[] {
-  const segments: Segment[] = [];
+  highlights: Array<TalkingPoint>,
+): TranscriptSegment[] {
+  const segments: TranscriptSegment[] = [];
   let lastPos = 0;
 
   for (const highlight of highlights) {
@@ -70,6 +70,8 @@ export function splitTranscript(
       lastPos = match.end;
     } else {
       console.warn("Highlight not found in transcript:", highlight.text);
+      // TODO: fall back to some part of the transcript which could reasonably contain the last
+      // talking point and summarize that
     }
   }
 

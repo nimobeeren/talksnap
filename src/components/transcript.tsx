@@ -1,12 +1,12 @@
 import { splitTranscript } from "@/string-utils";
-import { Highlight } from "@/types";
+import { TalkingPoint } from "@/types";
 
 export function Transcript({
   transcriptionResults,
   highlights,
 }: {
   transcriptionResults: any[] | null;
-  highlights: Highlight[];
+  highlights: TalkingPoint[];
 }) {
   const chunks = Array.from(transcriptionResults || []).map(
     (result) => result[0],

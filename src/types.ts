@@ -1,8 +1,8 @@
-export interface Highlight {
+export interface TalkingPoint {
   text: string;
   summary?: string;
 }
 
-export interface Segment extends Highlight {
+export interface TranscriptSegment extends TalkingPoint {
   isHighlight: boolean;
 }
