@@ -70,7 +70,7 @@ and the timing is right to
 `;
 
 describe("getLastTalkingPoint", () => {
-  test("returns the last talking point", async () => {
+  test("returns a valid talking point", async () => {
     const point = await getLastTalkingPoint(EXAMPLE_TRANSCRIPT);
     expect(point.text).toBeTruthy();
     expect(point.summary).toBeTruthy();
