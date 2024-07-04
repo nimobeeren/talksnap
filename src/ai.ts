@@ -1,5 +1,6 @@
 import { TalkingPoint } from "./types";
 
+import dedent from "dedent";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -18,9 +19,7 @@ export async function getLastTalkingPoint(
       {
         role: "system",
 
-        content: `You are an AI whose purpose is to capture highlights from conference talks.
-        Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant text of the transcript VERBATIM, then summarize the point in a single short sentence.
-        It's okay to use more context than what's included in the verbatim text.
+        content: dedent`You are an AI whose purpose is to capture highlights from conference talks. Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant text of the transcript VERBATIM, then summarize the point in a single concise statement from the perspective of the speaker (e.g. "you need to look at your data", "when condition X, system Y is better than system Z"). It's okay to use context from other parts of the transcript.
         
         Your answer must be in the following JSON format:
         {"text": <TEXT>, "summary": <SUMMARY>}`,
@@ -47,7 +46,10 @@ export async function getLastTalkingPoint(
     throw err;
   }
 
-  return parsedResult;
+  return {
+    text: parsedResult.text,
+    summary: parsedResult.summary
+  };
 }
 
 export async function MOCK_getLastTalkingPoint(
