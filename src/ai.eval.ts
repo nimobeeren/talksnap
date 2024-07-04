@@ -72,7 +72,7 @@ and the timing is right to
 describe("getLastTalkingPoint", () => {
   test("returns the last talking point", async () => {
     const point = await getLastTalkingPoint(EXAMPLE_TRANSCRIPT);
-    expect(point.segment).toBeTruthy();
+    expect(point.text).toBeTruthy();
     expect(point.summary).toBeTruthy();
     console.log(point);
   });

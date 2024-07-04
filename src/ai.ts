@@ -2,9 +2,10 @@ import { TalkingPoint } from "./types";
 
 import dedent from "dedent";
 import OpenAI from "openai";
+import { z } from "zod";
 
 const openai = new OpenAI({
-  // @ts-ignore
+  // @ts-expect-error property `env` does not exist for some reason
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true,
 });
@@ -31,25 +32,37 @@ export async function getLastTalkingPoint(
     ],
   });
 
-  let parsedResult = null;
+  return parseTalkingPoint(completion.choices[0].message.content);
+}
+
+export function parseTalkingPoint(json: string | null): TalkingPoint {
+  if (json === null) {
+    throw new Error("Talking point is null");
+  }
+
+  const schema = z.object({
+    text: z.string(),
+    summary: z.string().transform((val) => {
+      val = val.trim();
+      return val.charAt(0).toUpperCase() + val.slice(1); // capitalize first letter
+    }),
+  });
+
+  let parsedJson = null;
   try {
-    // @ts-ignore
-    parsedResult = JSON.parse(completion.choices[0].message.content);
+    parsedJson = JSON.parse(json);
   } catch (err) {
     if (err instanceof SyntaxError) {
       throw new Error(
-        `Invalid response format. Expected JSON object but got: '${completion.choices[0].message.content}'`,
-        // @ts-ignore
+        `Talking point is not valid JSON: '${json}'`,
+        // @ts-expect-error type libs don't yet include `cause`
         { cause: err },
       );
     }
     throw err;
   }
 
-  return {
-    text: parsedResult.text,
-    summary: parsedResult.summary
-  };
+  return schema.parse(parsedJson);
 }
 
 export async function MOCK_getLastTalkingPoint(
