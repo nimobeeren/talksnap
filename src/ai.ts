@@ -18,15 +18,16 @@ export async function getLastTalkingPoint(
       {
         role: "system",
 
-        content: `You are an AI whose purpose is to capture highlights from conference talks. Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant text of the transcript VERBATIM, then summarize the point in a single short sentence. It's okay to use more context than what's included in the verbatim text.
+        content: `You are an AI whose purpose is to capture highlights from conference talks.
+        Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant text of the transcript VERBATIM, then summarize the point in a single short sentence.
+        It's okay to use more context than what's included in the verbatim text.
         
         Your answer must be in the following JSON format:
-        {"text": <TEXT>, "summary": <SUMMARY>}
-        `,
+        {"text": <TEXT>, "summary": <SUMMARY>}`,
       },
       {
         role: "user",
-        content: `Transcript: ${transcript}`,
+        content: `Transcript: ${transcript.slice(transcript.length - 2000)}`,
       },
     ],
   });
@@ -49,7 +50,7 @@ export async function getLastTalkingPoint(
   return parsedResult;
 }
 
-export async function MOCK_highlightLastTalkingPoint(
+export async function MOCK_getLastTalkingPoint(
   // @ts-expect-error parameter is unused, but want to keep the same call signature
   transcript: string,
 ): Promise<TalkingPoint> {
