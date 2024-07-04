@@ -2,7 +2,6 @@ import { TalkingPoint } from "./types";
 
 import dedent from "dedent";
 import OpenAI from "openai";
-import { z } from "zod";
 
 const openai = new OpenAI({
   // @ts-expect-error property `env` does not exist for some reason
@@ -40,14 +39,6 @@ export function parseTalkingPoint(json: string | null): TalkingPoint {
     throw new Error("Talking point is null");
   }
 
-  const schema = z.object({
-    text: z.string(),
-    summary: z.string().transform((val) => {
-      val = val.trim();
-      return val.charAt(0).toUpperCase() + val.slice(1); // capitalize first letter
-    }),
-  });
-
   let parsedJson = null;
   try {
     parsedJson = JSON.parse(json);
@@ -62,7 +53,7 @@ export function parseTalkingPoint(json: string | null): TalkingPoint {
     throw err;
   }
 
-  return schema.parse(parsedJson);
+  return TalkingPoint.parse(parsedJson);
 }
 
 export async function MOCK_getLastTalkingPoint(
