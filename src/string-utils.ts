@@ -44,39 +44,39 @@ export function findBestSubstringMatch(
 }
 
 /**
- * Splits a transcript into a sequence of segments which are a highlight or not.
+ * Splits a transcript into a sequence of segments which are a snap or not.
  */
 export function splitTranscript(
   transcript: string,
-  highlights: Array<TalkingPoint>,
+  snaps: TalkingPoint[],
 ): TranscriptSegment[] {
   const segments: TranscriptSegment[] = [];
   let lastPos = 0;
 
-  for (const highlight of highlights) {
-    const match = findBestSubstringMatch(transcript, highlight.text);
+  for (const snap of snaps) {
+    const match = findBestSubstringMatch(transcript, snap.text);
     if (match) {
       if (match.start > lastPos) {
         segments.push({
-          isHighlight: false,
+          isSnap: false,
           text: transcript.slice(lastPos, match.start),
         });
       }
       segments.push({
-        isHighlight: true,
+        isSnap: true,
         text: match.text,
-        summary: highlight.summary,
+        summary: snap.summary,
       });
       lastPos = match.end;
     } else {
-      console.warn("Highlight not found in transcript:", highlight.text);
+      console.warn("Snap text not found in transcript:", snap.text);
       // TODO: fall back to some part of the transcript which could reasonably contain the last
       // talking point and summarize that
     }
   }
 
   if (lastPos < transcript.length) {
-    segments.push({ isHighlight: false, text: transcript.slice(lastPos) });
+    segments.push({ isSnap: false, text: transcript.slice(lastPos) });
   }
 
   return segments;

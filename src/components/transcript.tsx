@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 
 export function Transcript({
   transcriptionResults,
-  highlights,
-  highlightedHighlights,
+  snaps,
+  highlightedSnaps,
   className,
 }: {
   transcriptionResults: any[] | null;
-  highlights: TalkingPoint[];
-  highlightedHighlights: TalkingPoint[];
+  snaps: TalkingPoint[];
+  highlightedSnaps: TalkingPoint[];
   className?: string;
 }) {
   const chunks = Array.from(transcriptionResults || []).map(
@@ -26,19 +26,19 @@ export function Transcript({
     .map((chunk) => chunk.transcript)
     .join("");
 
-  const finalSegments = splitTranscript(finalTranscript, highlights);
+  const finalSegments = splitTranscript(finalTranscript, snaps);
 
   return (
     <div className={cn("whitespace-pre-wrap", className)}>
       {finalSegments.map((segment, index) => {
         const isHightlighted =
-          segment.isHighlight &&
-          highlightedHighlights.some((highlight) => highlight.text === segment.text);
+          segment.isSnap &&
+          highlightedSnaps.some((snap) => snap.text === segment.text);
         return (
           <span
             key={index}
             className={cn(
-              segment.isHighlight && "bg-blue-200",
+              segment.isSnap && "bg-blue-200",
               isHightlighted && "underline",
             )}
           >

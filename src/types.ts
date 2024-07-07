@@ -9,12 +9,12 @@ export const TalkingPoint = z.object({
 });
 export type TalkingPoint = z.infer<typeof TalkingPoint>;
 
-type HighlightSegment = {
-  isHighlight: true;
+type SnapSegment = {
+  isSnap: true;
 } & TalkingPoint;
 
-type NonHighlightSegment = {
-  isHighlight: false;
+type NonSnapSegment = {
+  isSnap: false;
 } & Omit<TalkingPoint, "summary">;
 
-export type TranscriptSegment = HighlightSegment | NonHighlightSegment;
+export type TranscriptSegment = SnapSegment | NonSnapSegment;

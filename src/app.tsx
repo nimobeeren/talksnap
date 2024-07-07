@@ -133,10 +133,11 @@ function useSpeechRecognition(speechRecognition: any, enabled: boolean): any[] {
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  // Highlights are talking points that the listener wishes to highlight
-  const [highlights, setHighlights] = useState<TalkingPoint[]>([]);
-  const [highlightedHighlight, setHighlightedHighlight] =
-    useState<TalkingPoint | null>(null);
+  // Snaps are talking points that the listener wants to remember
+  const [snaps, setSnaps] = useState<TalkingPoint[]>([]);
+  const [highlightedSnap, setHighlightedSnap] = useState<TalkingPoint | null>(
+    null,
+  );
 
   const transcriptionResults = useSpeechRecognition(
     speechRecognition,
@@ -148,20 +149,18 @@ function App() {
       <div className="mb-8 flex min-h-0 w-full grow gap-16">
         <Transcript
           transcriptionResults={transcriptionResults}
-          highlights={highlights}
-          highlightedHighlights={
-            highlightedHighlight ? [highlightedHighlight] : []
-          }
+          snaps={snaps}
+          highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
           className="w-1/2 overflow-y-auto text-gray-900"
         />
         <ul className="w-1/2 overflow-y-auto text-gray-900">
-          {highlights.map((highlight) => (
+          {snaps.map((snap) => (
             <li
-              key={highlight.summary}
-              onMouseEnter={() => setHighlightedHighlight(highlight)}
-              onMouseLeave={() => setHighlightedHighlight(null)}
+              key={snap.summary}
+              onMouseEnter={() => setHighlightedSnap(snap)}
+              onMouseLeave={() => setHighlightedSnap(null)}
             >
-              {highlight.summary}
+              {snap.summary}
             </li>
           ))}
         </ul>
@@ -188,7 +187,7 @@ function App() {
               return;
             }
 
-            setHighlights((prev) => [...prev, lastTalkingPoint]);
+            setSnaps((prev) => [...prev, lastTalkingPoint]);
           }}
         >
           Snap!

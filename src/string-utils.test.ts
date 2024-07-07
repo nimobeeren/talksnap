@@ -4,107 +4,107 @@ import { findBestSubstringMatch, splitTranscript } from "./string-utils";
 describe("findBestSubstringMatch", () => {
   test("returns null when no match is found", () => {
     const transcript = "This is a test transcript";
-    const highlight = "foo";
-    const match = findBestSubstringMatch(transcript, highlight);
+    const pattern = "foo";
+    const match = findBestSubstringMatch(transcript, pattern);
     expect(match).toBeNull();
   });
 
   test("returns the correct pos when matching exactly", () => {
     const transcript = "This is a test transcript";
-    const highlight = "test";
+    const pattern = "test";
 
-    const match = findBestSubstringMatch(transcript, highlight);
+    const match = findBestSubstringMatch(transcript, pattern);
 
     expect(match).toEqual({ text: "test", start: 10, end: 14 });
   });
 
   test("returns the correct pos when matching with case differences", () => {
     const transcript = "This is a test transcript";
-    const highlight = "TEST";
+    const pattern = "TEST";
 
-    const match = findBestSubstringMatch(transcript, highlight);
+    const match = findBestSubstringMatch(transcript, pattern);
 
     expect(match).toEqual({ text: "test", start: 10, end: 14 });
   });
 
   test("returns the correct pos when matching with whitespace differences", () => {
     const transcript = "This is a\ntest transcript";
-    const highlight = "is a test";
+    const pattern = "is a test";
 
-    const match = findBestSubstringMatch(transcript, highlight);
+    const match = findBestSubstringMatch(transcript, pattern);
 
     expect(match).toEqual({ text: "is a\ntest", start: 5, end: 14 });
   });
 
   test.skip("returns the correct pos when matching with punctuation differences", () => {
     const transcript = "This is a test transcript";
-    const highlight = "test transcript.";
+    const pattern = "test transcript.";
 
-    const match = findBestSubstringMatch(transcript, highlight);
+    const match = findBestSubstringMatch(transcript, pattern);
 
     expect(match).toEqual({ text: "test transcript", start: 10, end: 25 });
   });
 });
 
 describe("splitTranscript", () => {
-  test("returns the correct segments without highlights", () => {
+  test("returns the correct segments without snaps", () => {
     const transcript = "This is a test transcript";
-    const highlights: any[] = [];
-    const match = splitTranscript(transcript, highlights);
+    const snaps: any[] = [];
+    const match = splitTranscript(transcript, snaps);
     expect(match).toEqual([
-      { isHighlight: false, text: "This is a test transcript" },
+      { isSnap: false, text: "This is a test transcript" },
     ]);
   });
 
-  test("returns the correct segments with highlights", () => {
+  test("returns the correct segments with snaps", () => {
     const transcript =
       "Check out this cool transcript that we use for testing awesome applications";
-    const highlights = [
+    const snaps = [
       { text: "cool transcript", summary: "cool" },
       { text: "awesome", summary: "awesome" },
     ];
-    const segments = splitTranscript(transcript, highlights);
+    const segments = splitTranscript(transcript, snaps);
     expect(segments).toEqual([
-      { isHighlight: false, text: "Check out this " },
-      { isHighlight: true, text: "cool transcript", summary: "cool" },
-      { isHighlight: false, text: " that we use for testing " },
-      { isHighlight: true, text: "awesome", summary: "awesome" },
-      { isHighlight: false, text: " applications" },
+      { isSnap: false, text: "Check out this " },
+      { isSnap: true, text: "cool transcript", summary: "cool" },
+      { isSnap: false, text: " that we use for testing " },
+      { isSnap: true, text: "awesome", summary: "awesome" },
+      { isSnap: false, text: " applications" },
     ]);
   });
 
-  test("returns the correct segments when highlight is at the start", () => {
+  test("returns the correct segments when snap is at the start", () => {
     const transcript = "This is a test transcript";
-    const highlights = [{ text: "this", summary: "this" }];
-    const segments = splitTranscript(transcript, highlights);
+    const snaps = [{ text: "this", summary: "this" }];
+    const segments = splitTranscript(transcript, snaps);
     expect(segments).toEqual([
-      { isHighlight: true, text: "This", summary: "this" },
-      { isHighlight: false, text: " is a test transcript" },
+      { isSnap: true, text: "This", summary: "this" },
+      { isSnap: false, text: " is a test transcript" },
     ]);
   });
 
-  test("returns the correct segments when highlight is at the end", () => {
+  test("returns the correct segments when snap is at the end", () => {
     const transcript = "This is a test transcript";
-    const highlights = [{ text: "transcript", summary: "transcript" }];
-    const segments = splitTranscript(transcript, highlights);
+    const snaps = [{ text: "transcript", summary: "transcript" }];
+    const segments = splitTranscript(transcript, snaps);
     expect(segments).toEqual([
-      { isHighlight: false, text: "This is a test " },
-      { isHighlight: true, text: "transcript", summary: "transcript" },
+      { isSnap: false, text: "This is a test " },
+      { isSnap: true, text: "transcript", summary: "transcript" },
     ]);
   });
 
-  test("returns the correct segments when highlights are touching", () => {
+  test("returns the correct segments when snaps are touching", () => {
     const transcript = "abcd";
-    const highlights = [
+    const snaps = [
       { text: "b", summary: "b" },
       { text: "c", summary: "c" },
     ];
-    const segments = splitTranscript(transcript, highlights);
+    const segments = splitTranscript(transcript, snaps);
     expect(segments).toEqual([
-      { isHighlight: false, text: "a" },
-      { isHighlight: true, text: "b", summary: "b" },
-      { isHighlight: true, text: "c", summary: "c" },
-      { isHighlight: false, text: "d" },
+      { isSnap: false, text: "a" },
+      { isSnap: true, text: "b", summary: "b" },
+      { isSnap: true, text: "c", summary: "c" },
+      { isSnap: false, text: "d" },
     ]);
   });
 });
