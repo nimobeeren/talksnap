@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 export function Transcript({
   transcriptionResults,
   highlights,
+  highlightedHighlights,
   className,
 }: {
   transcriptionResults: any[] | null;
   highlights: TalkingPoint[];
+  highlightedHighlights: TalkingPoint[];
   className?: string;
 }) {
   const chunks = Array.from(transcriptionResults || []).map(
@@ -29,14 +31,16 @@ export function Transcript({
   return (
     <div className={cn("whitespace-pre-wrap", className)}>
       {finalSegments.map((segment, index) => {
+        const isHightlighted =
+          segment.isHighlight &&
+          highlightedHighlights.some((highlight) => highlight.text === segment.text);
         return (
           <span
             key={index}
-            className={
-              segment.isHighlight
-                ? "text-red-700 underline underline-offset-1"
-                : undefined
-            }
+            className={cn(
+              segment.isHighlight && "bg-blue-200",
+              isHightlighted && "underline",
+            )}
           >
             {segment.text}
           </span>

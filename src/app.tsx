@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getLastTalkingPoint } from "./ai";
+import { MOCK_getLastTalkingPoint } from "./ai";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
@@ -134,11 +134,9 @@ function useSpeechRecognition(speechRecognition: any, enabled: boolean): any[] {
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   // Highlights are talking points that the listener wishes to highlight
-  const [highlights, setHighlights] = useState<TalkingPoint[]>(
-    Array.from({ length: 100 }).map(() => ({ summary: "test", text: "test" })),
-  );
-
-  console.log({ highlights });
+  const [highlights, setHighlights] = useState<TalkingPoint[]>([]);
+  const [highlightedHighlight, setHighlightedHighlight] =
+    useState<TalkingPoint | null>(null);
 
   const transcriptionResults = useSpeechRecognition(
     speechRecognition,
@@ -151,11 +149,20 @@ function App() {
         <Transcript
           transcriptionResults={transcriptionResults}
           highlights={highlights}
+          highlightedHighlights={
+            highlightedHighlight ? [highlightedHighlight] : []
+          }
           className="w-1/2 overflow-y-auto text-gray-900"
         />
         <ul className="w-1/2 overflow-y-auto text-gray-900">
           {highlights.map((highlight) => (
-            <li key={highlight.summary}>{highlight.summary}</li>
+            <li
+              key={highlight.summary}
+              onMouseEnter={() => setHighlightedHighlight(highlight)}
+              onMouseLeave={() => setHighlightedHighlight(null)}
+            >
+              {highlight.summary}
+            </li>
           ))}
         </ul>
       </div>
@@ -175,7 +182,7 @@ function App() {
 
             let lastTalkingPoint;
             try {
-              lastTalkingPoint = await getLastTalkingPoint(transcript);
+              lastTalkingPoint = await MOCK_getLastTalkingPoint(transcript);
             } catch (err) {
               console.error(err);
               return;

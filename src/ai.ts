@@ -60,6 +60,13 @@ export async function MOCK_getLastTalkingPoint(
   // @ts-expect-error parameter is unused, but want to keep the same call signature
   transcript: string,
 ): Promise<TalkingPoint> {
+//   return {
+//     text: `I do
+// think there is some meaning towards
+// thinking about highers higher orders of
+// magnitude towards raising your Ambitions`,
+//   summary: "raise your ambitions",
+//   }
   return {
     text: `my message to
 you today is that you are just in time
