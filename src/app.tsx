@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { MOCK_getLastTalkingPoint } from "./ai";
+import { AI } from "./ai";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
@@ -133,10 +133,20 @@ function useSpeechRecognition(speechRecognition: any, enabled: boolean): any[] {
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
+  
   // Snaps are talking points that the listener wants to remember
   const [snaps, setSnaps] = useState<TalkingPoint[]>([]);
   const [highlightedSnap, setHighlightedSnap] = useState<TalkingPoint | null>(
     null,
+  );
+
+  const [openAiKey, setOpenAiKey] = useState<string | null>(
+    // @ts-expect-error property `env` does not exist for some reason
+    import.meta.env.VITE_OPENAI_API_KEY,
+  );
+  const ai = useMemo(
+    () => (openAiKey ? new AI(openAiKey) : undefined),
+    [openAiKey],
   );
 
   const transcriptionResults = useSpeechRecognition(
@@ -170,7 +180,13 @@ function App() {
           {isTranscribing ? "Stop Transcription" : "Start Transcription"}
         </Button>
         <Button
+          disabled={!ai}
           onClick={async () => {
+            if (!ai) {
+              alert("OpenAI key not set");
+              return;
+            }
+
             const chunks = Array.from(transcriptionResults).map(
               (result) => result[0],
             );
@@ -181,7 +197,7 @@ function App() {
 
             let lastTalkingPoint;
             try {
-              lastTalkingPoint = await MOCK_getLastTalkingPoint(transcript);
+              lastTalkingPoint = await ai.MOCK_getLastTalkingPoint(transcript);
             } catch (err) {
               console.error(err);
               return;

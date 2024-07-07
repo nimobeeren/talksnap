@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
-import { getLastTalkingPoint } from "./ai";
+import { beforeEach, describe, expect, test } from "vitest";
+import { AI } from "./ai";
 
 const EXAMPLE_TRANSCRIPT = `a few logistical things one I'm I'm
 carrying a magic Trackpad because
@@ -70,8 +70,14 @@ and the timing is right to
 `;
 
 describe("getLastTalkingPoint", () => {
+  let ai: AI;
+  beforeEach(() => {
+    // @ts-expect-error property `env` does not exist for some reason
+    ai = new AI(import.meta.env.VITE_OPENAI_API_KEY);
+  });
+
   test("returns a valid talking point", async () => {
-    const point = await getLastTalkingPoint(EXAMPLE_TRANSCRIPT);
+    const point = await ai.getLastTalkingPoint(EXAMPLE_TRANSCRIPT);
     expect(point.text).toBeTruthy();
     expect(point.summary).toBeTruthy();
     console.log(point);
