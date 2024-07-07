@@ -134,7 +134,11 @@ function useSpeechRecognition(speechRecognition: any, enabled: boolean): any[] {
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   // Highlights are talking points that the listener wishes to highlight
-  const [highlights, setHighlights] = useState<TalkingPoint[]>([]);
+  const [highlights, setHighlights] = useState<TalkingPoint[]>(
+    Array.from({ length: 100 }).map(() => ({ summary: "test", text: "test" })),
+  );
+
+  console.log({ highlights });
 
   const transcriptionResults = useSpeechRecognition(
     speechRecognition,
@@ -142,13 +146,14 @@ function App() {
   );
 
   return (
-    <div className="flex max-h-screen min-h-screen w-full flex-col items-center bg-background bg-black p-16 pb-0">
-      <div className="mb-8 flex w-full grow gap-16 overflow-y-auto">
+    <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
+      <div className="mb-8 flex min-h-0 w-full grow gap-16">
         <Transcript
           transcriptionResults={transcriptionResults}
           highlights={highlights}
+          className="w-1/2 overflow-y-auto text-gray-900"
         />
-        <ul className="w-1/2 text-gray-400">
+        <ul className="w-1/2 overflow-y-auto text-gray-900">
           {highlights.map((highlight) => (
             <li key={highlight.summary}>{highlight.summary}</li>
           ))}
