@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "tsc": "tsc -p tsconfig.app.json",
     "preview": "vite preview",
     "test": "vitest **/*.test.[jt]s",
     "eval": "vitest --run **/*.eval.[jt]s"
@@ -41,7 +42,7 @@
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwindcss": "^3.4.4",
-    "typescript": "^5.2.2",
+    "typescript": "^5.5.3",
     "vite": "^5.3.1",
     "vitest": "^1.6.0"
   }
