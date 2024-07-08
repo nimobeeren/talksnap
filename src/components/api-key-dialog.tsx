@@ -54,8 +54,8 @@ export function ApiKeyDialog({
               className="underline"
             >
               OpenAI API key
-            </a>
-            .
+            </a>{" "}
+            (risky but cool).
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
