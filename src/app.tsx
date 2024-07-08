@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { AI } from "./ai";
+import { ApiKeyDialog } from "./components/api-key-dialog";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
@@ -133,14 +134,14 @@ function useSpeechRecognition(speechRecognition: any, enabled: boolean): any[] {
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  
+
   // Snaps are talking points that the listener wants to remember
   const [snaps, setSnaps] = useState<TalkingPoint[]>([]);
   const [highlightedSnap, setHighlightedSnap] = useState<TalkingPoint | null>(
     null,
   );
 
-  const [openAiKey, setOpenAiKey] = useState<string | null>(
+  const [openAiKey, setOpenAiKey] = useState<string | undefined>(
     // @ts-expect-error property `env` does not exist for some reason
     import.meta.env.VITE_OPENAI_API_KEY,
   );
@@ -155,61 +156,69 @@ function App() {
   );
 
   return (
-    <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
-      <div className="mb-8 flex min-h-0 w-full grow gap-16">
-        <Transcript
-          transcriptionResults={transcriptionResults}
-          snaps={snaps}
-          highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
-          className="w-1/2 overflow-y-auto text-gray-900"
-        />
-        <ul className="w-1/2 overflow-y-auto text-gray-900">
-          {snaps.map((snap) => (
-            <li
-              key={snap.summary}
-              onMouseEnter={() => setHighlightedSnap(snap)}
-              onMouseLeave={() => setHighlightedSnap(null)}
-            >
-              {snap.summary}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="flex w-full justify-center gap-4 border-t-2 border-gray-300 p-8">
-        <Button onClick={() => setIsTranscribing((prev) => !prev)}>
-          {isTranscribing ? "Stop Transcription" : "Start Transcription"}
-        </Button>
-        <Button
-          disabled={!ai}
-          onClick={async () => {
-            if (!ai) {
-              alert("OpenAI key not set");
-              return;
-            }
+    <>
+      <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
+        <div className="mb-8 flex min-h-0 w-full grow gap-16">
+          <Transcript
+            transcriptionResults={transcriptionResults}
+            snaps={snaps}
+            highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
+            className="w-1/2 overflow-y-auto text-gray-900"
+          />
+          <ul className="w-1/2 overflow-y-auto text-gray-900">
+            {snaps.map((snap) => (
+              <li
+                key={snap.summary}
+                onMouseEnter={() => setHighlightedSnap(snap)}
+                onMouseLeave={() => setHighlightedSnap(null)}
+              >
+                {snap.summary}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex w-full justify-center gap-4 border-t-2 border-gray-300 p-8">
+          <Button onClick={() => setIsTranscribing((prev) => !prev)}>
+            {isTranscribing ? "Stop Transcription" : "Start Transcription"}
+          </Button>
+          <Button
+            disabled={!ai}
+            onClick={async () => {
+              if (!ai) {
+                alert("OpenAI key not set");
+                return;
+              }
 
-            const chunks = Array.from(transcriptionResults).map(
-              (result) => result[0],
-            );
-            const transcript = chunks
-              .filter((result: any) => result.isFinal)
-              .map((result: any) => result.transcript)
-              .join("");
+              const chunks = Array.from(transcriptionResults).map(
+                (result) => result[0],
+              );
+              const transcript = chunks
+                .filter((result: any) => result.isFinal)
+                .map((result: any) => result.transcript)
+                .join("");
 
-            let lastTalkingPoint;
-            try {
-              lastTalkingPoint = await ai.MOCK_getLastTalkingPoint(transcript);
-            } catch (err) {
-              console.error(err);
-              return;
-            }
+              let lastTalkingPoint;
+              try {
+                lastTalkingPoint = await ai.getLastTalkingPoint(transcript);
+              } catch (err) {
+                console.error(err);
+                return;
+              }
 
-            setSnaps((prev) => [...prev, lastTalkingPoint]);
+              setSnaps((prev) => [...prev, lastTalkingPoint]);
+            }}
+          >
+            Snap!
+          </Button>
+        </div>
+        <ApiKeyDialog
+          defaultKey={openAiKey}
+          onKeySubmit={(key) => {
+            return setOpenAiKey(key);
           }}
-        >
-          Snap!
-        </Button>
+        />
       </div>
-    </div>
+    </>
   );
 }
 
