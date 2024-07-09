@@ -13,6 +13,17 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        emoji: [
+          '"Apple Color Emoji"',
+          '"Segoe UI Emoji"',
+          '"Segoe UI Symbol"',
+          '"Noto Color Emoji"',
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

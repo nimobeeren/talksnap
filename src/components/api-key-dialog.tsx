@@ -10,39 +10,48 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
 
 const schema = z.object({
-  key: z.string().min(1, {
-    message: "API key is required",
-  }),
+  apiKey: z.string(),
 });
 
 export function ApiKeyDialog({
-  defaultKey,
-  onKeySubmit,
+  apiKey,
+  onApiKeySubmit,
 }: {
-  defaultKey?: string;
-  onKeySubmit: (key: string) => void;
+  apiKey?: string;
+  onApiKeySubmit: (key: string) => void;
 }) {
-  // LEFT HERE
-  // TODO: pick a good time to open the dialog
-  const [isOpen, setIsOpen] = useState(true);
+  // TODO: don't open the dialog immediately the first time someone visits, show a tooltip instead
+  const [isOpen, setIsOpen] = useState(!apiKey);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { key: defaultKey ?? "" },
+    defaultValues: { apiKey: apiKey ?? "" },
   });
 
   function onSubmit(values: z.infer<typeof schema>) {
-    onKeySubmit(values.key);
+    onApiKeySubmit(values.apiKey);
     setIsOpen(false);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {/* Need to set `font-emoji` to ensure symbols render as emoji instead of plain unicode glyph */}
+        <Button variant="outline" className="font-emoji space-x-1 px-2">
+          <span aria-label="key">🔑</span>
+          {apiKey ? (
+            <span aria-label="checkmark">✅</span>
+          ) : (
+            <span aria-label="warning">⚠️</span>
+          )}
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>API Key</DialogTitle>
@@ -61,7 +70,7 @@ export function ApiKeyDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="key"
+              name="apiKey"
               render={({ field }) => (
                 <FormItem className="grow">
                   <FormControl>

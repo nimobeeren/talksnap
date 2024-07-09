@@ -32,28 +32,32 @@ function App() {
   );
 
   return (
-    <>
-      <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
-        <div className="mb-8 flex min-h-0 w-full grow gap-16">
-          <Transcript
-            transcriptionResults={transcriptionResults}
-            snaps={snaps}
-            highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
-            className="w-1/2 overflow-y-auto text-gray-900"
-          />
-          <ul className="w-1/2 overflow-y-auto text-gray-900">
-            {snaps.map((snap) => (
-              <li
-                key={snap.summary}
-                onMouseEnter={() => setHighlightedSnap(snap)}
-                onMouseLeave={() => setHighlightedSnap(null)}
-              >
-                {snap.summary}
-              </li>
-            ))}
-          </ul>
+    <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
+      <div className="mb-8 flex min-h-0 w-full grow gap-16">
+        <Transcript
+          transcriptionResults={transcriptionResults}
+          snaps={snaps}
+          highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
+          className="w-1/2 overflow-y-auto text-gray-900"
+        />
+        <ul className="w-1/2 overflow-y-auto text-gray-900">
+          {snaps.map((snap) => (
+            <li
+              key={snap.summary}
+              onMouseEnter={() => setHighlightedSnap(snap)}
+              onMouseLeave={() => setHighlightedSnap(null)}
+            >
+              {snap.summary}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex w-full flex-wrap justify-center gap-4 border-t-2 border-gray-300 p-8">
+        <div className="grow basis-0 -mr-4">
+          {/* Placeholder to keep main buttons centered */}
+          {/* `-mr-4` is to counter the flex gap */}
         </div>
-        <div className="flex w-full justify-center gap-4 border-t-2 border-gray-300 p-8">
+        <div className="flex gap-4">
           <Button onClick={() => setIsTranscribing((prev) => !prev)}>
             {isTranscribing ? "Stop Transcription" : "Start Transcription"}
           </Button>
@@ -64,12 +68,10 @@ function App() {
                 alert("OpenAI key not set");
                 return;
               }
-
               const transcript = Array.from(transcriptionResults || [])
                 .filter((result) => result.isFinal)
                 .map((result) => result[0].transcript)
                 .join("");
-
               let lastTalkingPoint;
               try {
                 lastTalkingPoint = await ai.getLastTalkingPoint(transcript);
@@ -77,21 +79,20 @@ function App() {
                 console.error(err);
                 return;
               }
-
               setSnaps((prev) => [...prev, lastTalkingPoint]);
             }}
           >
             Snap!
           </Button>
         </div>
-        <ApiKeyDialog
-          defaultKey={openAiKey}
-          onKeySubmit={(key) => {
-            return setOpenAiKey(key);
-          }}
-        />
+        <div className="flex grow basis-0 justify-end">
+          <ApiKeyDialog
+            apiKey={openAiKey}
+            onApiKeySubmit={(key) => setOpenAiKey(key)}
+          />
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
