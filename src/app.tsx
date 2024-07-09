@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocalStorage } from "react-use";
 
 import { AI } from "./ai";
 import { ApiKeyDialog } from "./components/api-key-dialog";
@@ -141,7 +142,8 @@ function App() {
     null,
   );
 
-  const [openAiKey, setOpenAiKey] = useState<string | undefined>(
+  const [openAiKey, setOpenAiKey] = useLocalStorage<string>(
+    "openai-api-key",
     // @ts-expect-error property `env` does not exist for some reason
     import.meta.env.VITE_OPENAI_API_KEY,
   );

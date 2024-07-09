@@ -29,7 +29,6 @@ export function ApiKeyDialog({
 }) {
   // LEFT HERE
   // TODO: pick a good time to open the dialog
-  // TODO: store key in localStorage
   const [isOpen, setIsOpen] = useState(true);
 
   const form = useForm<z.infer<typeof schema>>({
