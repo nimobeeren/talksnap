@@ -9,21 +9,19 @@ export function Transcript({
   highlightedSnaps,
   className,
 }: {
-  transcriptionResults: any[] | null;
+  transcriptionResults: SpeechRecognitionResultList | null;
   snaps: TalkingPoint[];
   highlightedSnaps: TalkingPoint[];
   className?: string;
 }) {
-  const chunks = Array.from(transcriptionResults || []).map(
-    (result) => result[0],
-  );
-  const finalTranscript = chunks
-    .filter((chunk) => chunk.isFinal)
-    .map((chunk) => chunk.transcript)
+  const finalTranscript = Array.from(transcriptionResults || [])
+    .filter((result) => result.isFinal)
+    .map((result) => result[0].transcript)
     .join("");
-  const nonFinalTranscript = chunks
-    .filter((chunk) => !chunk.isFinal)
-    .map((chunk) => chunk.transcript)
+
+  const nonFinalTranscript = Array.from(transcriptionResults || [])
+    .filter((result) => !result.isFinal)
+    .map((result) => result[0].transcript)
     .join("");
 
   const finalSegments = splitTranscript(finalTranscript, snaps);
@@ -47,7 +45,7 @@ export function Transcript({
         );
       })}
       {nonFinalTranscript && (
-        <span className="opacity-80">{nonFinalTranscript}</span>
+        <span className="opacity-60">{nonFinalTranscript}</span>
       )}
     </div>
   );
