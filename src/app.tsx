@@ -69,7 +69,6 @@ function App() {
                 return;
               }
               const transcript = Array.from(transcriptionResults || [])
-                .filter((result) => result.isFinal)
                 .map((result) => result[0].transcript)
                 .join("");
               let lastTalkingPoint;
