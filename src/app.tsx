@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "react-use";
 
 import { AI } from "./ai";
@@ -16,6 +16,13 @@ function App() {
   const [highlightedSnap, setHighlightedSnap] = useState<TalkingPoint | null>(
     null,
   );
+
+  // Clear snaps when transcribing starts
+  useEffect(() => {
+    if (isTranscribing) {
+      setSnaps([]);
+    }
+  }, [isTranscribing]);
 
   const transcriptionResults = useSpeechRecognition({
     enabled: isTranscribing,
@@ -53,7 +60,7 @@ function App() {
         </ul>
       </div>
       <div className="flex w-full flex-wrap justify-center gap-4 border-t-2 border-gray-300 p-8">
-        <div className="grow basis-0 -mr-4">
+        <div className="-mr-4 grow basis-0">
           {/* Placeholder to keep main buttons centered */}
           {/* `-mr-4` is to counter the flex gap */}
         </div>
