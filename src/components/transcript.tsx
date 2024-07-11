@@ -14,21 +14,15 @@ export function Transcript({
   highlightedSnaps: TalkingPoint[];
   className?: string;
 }) {
-  const finalTranscript = Array.from(transcriptionResults || [])
-    .filter((result) => result.isFinal)
+  const transcript = Array.from(transcriptionResults || [])
     .map((result) => result[0].transcript)
     .join("");
 
-  const nonFinalTranscript = Array.from(transcriptionResults || [])
-    .filter((result) => !result.isFinal)
-    .map((result) => result[0].transcript)
-    .join("");
-
-  const finalSegments = splitTranscript(finalTranscript, snaps);
+  const segments = splitTranscript(transcript, snaps);
 
   return (
     <div className={cn("whitespace-pre-wrap", className)}>
-      {finalSegments.map((segment, index) => {
+      {segments.map((segment, index) => {
         const isHightlighted =
           segment.isSnap &&
           highlightedSnaps.some((snap) => snap.text === segment.text);
@@ -44,9 +38,6 @@ export function Transcript({
           </span>
         );
       })}
-      {nonFinalTranscript && (
-        <span className="opacity-60">{nonFinalTranscript}</span>
-      )}
     </div>
   );
 }
