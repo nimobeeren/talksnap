@@ -4,6 +4,59 @@ import { useEffect, useMemo, useState } from "react";
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
+export function useSpeechRecognition({
+  enabled,
+}: {
+  enabled: boolean;
+}): SpeechRecognitionResultList | null {
+  const speechRecognition = useMemo(() => {
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    return recognition;
+  }, []);
+
+  const [transcriptionResults, setTranscriptionResults] =
+    useState<SpeechRecognitionResultList | null>(null);
+
+  // While transcribing, listen for speech and update the transcription state
+  useEffect(() => {
+    const handleTranscriptionResult = (event: SpeechRecognitionEvent) => {
+      setTranscriptionResults(event.results);
+    };
+
+    const startTranscription = () => {
+      setTranscriptionResults(null);
+      speechRecognition.addEventListener("result", handleTranscriptionResult);
+      speechRecognition.start();
+    };
+
+    const stopTranscription = () => {
+      if (speechRecognition) {
+        speechRecognition.removeEventListener(
+          "result",
+          handleTranscriptionResult,
+        );
+        speechRecognition.stop();
+      }
+    };
+
+    if (enabled) {
+      startTranscription();
+    } else {
+      stopTranscription();
+    }
+
+    return () => {
+      stopTranscription();
+    };
+  }, [speechRecognition, enabled]);
+
+  return transcriptionResults;
+}
+
+// @ts-ignore
 const MOCK_TRANSCRIPTION_RESULTS = [
   {
     isFinal: true,
@@ -78,59 +131,3 @@ const MOCK_TRANSCRIPTION_RESULTS = [
     },
   },
 ];
-
-export function useSpeechRecognition({
-  enabled,
-}: {
-  enabled: boolean;
-}): SpeechRecognitionResultList | null {
-  const speechRecognition = useMemo(() => {
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    return recognition;
-  }, []);
-
-  // const [transcriptionResults, setTranscriptionResults] =
-  //   useState<SpeechRecognitionResultList | null>(null);
-  const [transcriptionResults, setTranscriptionResults] =
-    useState<SpeechRecognitionResultList | null>(
-      MOCK_TRANSCRIPTION_RESULTS as any as SpeechRecognitionResultList,
-    );
-
-  // While transcribing, listen for speech and update the transcription state
-  useEffect(() => {
-    const handleTranscriptionResult = (event: SpeechRecognitionEvent) => {
-      setTranscriptionResults(event.results);
-    };
-
-    const startTranscription = () => {
-      setTranscriptionResults(null);
-      speechRecognition.addEventListener("result", handleTranscriptionResult);
-      speechRecognition.start();
-    };
-
-    const stopTranscription = () => {
-      if (speechRecognition) {
-        speechRecognition.removeEventListener(
-          "result",
-          handleTranscriptionResult,
-        );
-        speechRecognition.stop();
-      }
-    };
-
-    if (enabled) {
-      startTranscription();
-    } else {
-      stopTranscription();
-    }
-
-    return () => {
-      stopTranscription();
-    };
-  }, [speechRecognition, enabled]);
-
-  return transcriptionResults;
-}

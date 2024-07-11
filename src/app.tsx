@@ -38,46 +38,70 @@ function App() {
     [openAiKey],
   );
 
+  const transcript = Array.from(transcriptionResults || [])
+    .map((result) => result[0].transcript)
+    .join("");
+
   return (
     <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
-      <div className="mb-8 flex min-h-0 w-full grow gap-16">
-        <Transcript
-          transcriptionResults={transcriptionResults}
-          snaps={snaps}
-          highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
-          className="w-1/2 overflow-y-auto text-gray-900"
-        />
-        <ul className="w-1/2 overflow-y-auto text-gray-900">
-          {snaps.map((snap) => (
-            <li
-              key={snap.summary}
-              onMouseEnter={() => setHighlightedSnap(snap)}
-              onMouseLeave={() => setHighlightedSnap(null)}
-            >
-              {snap.summary}
-            </li>
-          ))}
-        </ul>
+      <div className="mb-8 flex min-h-0 w-full grow text-gray-900">
+        <div className="w-1/2 border-r border-gray-300 pr-8">
+          {transcript || isTranscribing ? (
+            <Transcript
+              transcriptionResults={transcriptionResults}
+              snaps={snaps}
+              highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
+              className="h-full w-full overflow-y-auto"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-center">
+              A transcript will appear here when you press "Start Transcription"
+            </div>
+          )}
+        </div>
+        <div className="w-1/2 pl-8">
+          {snaps.length > 0 ? (
+            <ul className="overflow-y-auto">
+              {snaps.map((snap) => (
+                <li
+                  key={snap.summary}
+                  onMouseEnter={() => setHighlightedSnap(snap)}
+                  onMouseLeave={() => setHighlightedSnap(null)}
+                >
+                  {snap.summary}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex h-full items-center justify-center text-center">
+              {ai
+                ? "Highlights will appear here when you press 'Snap!'"
+                : "To make snaps, you need to enter an OpenAI API key"}
+            </div>
+          )}
+        </div>
       </div>
+      {/* Bottom bar */}
       <div className="flex w-full flex-wrap justify-center gap-4 border-t-2 border-gray-300 p-8">
         <div className="-mr-4 grow basis-0">
           {/* Placeholder to keep main buttons centered */}
           {/* `-mr-4` is to counter the flex gap */}
         </div>
         <div className="flex gap-4">
-          <Button onClick={() => setIsTranscribing((prev) => !prev)}>
+          <Button
+            onClick={() => setIsTranscribing((prev) => !prev)}
+            variant={isTranscribing ? "outline" : "default"}
+          >
             {isTranscribing ? "Stop Transcription" : "Start Transcription"}
           </Button>
           <Button
-            disabled={!ai}
+            disabled={!ai || !transcript}
             onClick={async () => {
               if (!ai) {
                 alert("OpenAI key not set");
                 return;
               }
-              const transcript = Array.from(transcriptionResults || [])
-                .map((result) => result[0].transcript)
-                .join("");
+
               let lastTalkingPoint;
               try {
                 lastTalkingPoint = await ai.getLastTalkingPoint(transcript);

@@ -26,7 +26,6 @@ export function ApiKeyDialog({
   apiKey?: string;
   onApiKeySubmit: (key: string) => void;
 }) {
-  // TODO: don't open the dialog immediately the first time someone visits, show a tooltip instead
   const [isOpen, setIsOpen] = useState(!apiKey);
 
   const form = useForm<z.infer<typeof schema>>({
