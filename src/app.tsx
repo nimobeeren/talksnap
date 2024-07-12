@@ -61,7 +61,7 @@ function App() {
         </div>
         <div className="w-1/2 pl-8">
           {snaps.length > 0 ? (
-            <ul className="overflow-y-auto">
+            <ul className="overflow-y-auto list-disc list-inside">
               {snaps.map((snap) => (
                 <li
                   key={snap.summary}

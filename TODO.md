@@ -1,0 +1,5 @@
+- Auto-scroll transcript
+- Investigate jittery transcription results
+- Reduce max line length
+- Check OpenAI key on submit
+- Add separate clear button or make it obvious that starting a new transcription will clear the old one
