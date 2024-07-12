@@ -38,7 +38,7 @@ export class AI {
         return this.parseTalkingPoint(completion.choices[0].message.content);
       },
       {
-        shouldRetry: (err) => !(err instanceof OpenAI.AuthenticationError)
+        shouldRetry: (err) => !(err instanceof OpenAI.AuthenticationError),
       },
     );
   }
@@ -52,14 +52,9 @@ export class AI {
     try {
       parsedJson = JSON.parse(json);
     } catch (err) {
-      if (err instanceof SyntaxError) {
-        throw new Error(
-          `Talking point is not valid JSON: '${json}'`,
-          // @ts-expect-error type libs don't yet include `cause`
-          { cause: err },
-        );
-      }
-      throw err;
+      throw new Error(`Could not parse talking point as JSON: '${json}'`, {
+        cause: err,
+      });
     }
 
     return TalkingPoint.parse(parsedJson);
