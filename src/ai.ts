@@ -1,6 +1,7 @@
 import dedent from "dedent";
 import OpenAI from "openai";
 
+import retry from "./retry";
 import { TalkingPoint } from "./types";
 
 export class AI {
@@ -14,26 +15,32 @@ export class AI {
   }
 
   async getLastTalkingPoint(transcript: string): Promise<TalkingPoint> {
-    const completion = await this.openai.chat.completions.create({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-
-          content: dedent`You are an AI whose purpose is to capture highlights from conference talks. Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant text of the transcript VERBATIM, then summarize the point in a single concise statement from the perspective of the speaker (e.g. "you need to look at your data", "when condition X, system Y is better than system Z"). It's okay to use context from other parts of the transcript.
+    return retry(
+      async () => {
+        const completion = await this.openai.chat.completions.create({
+          model: "gpt-4o",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: dedent`Your purpose is to capture highlights from conference talks. Given a live transcript of the talk, your purpose is to identify only the last point made by the speaker, output the relevant text of the transcript VERBATIM, then summarize the point in a single concise statement from the perspective of the speaker (e.g. "you need to look at your data", "when condition X, system Y is better than system Z"). It's okay to use context from other parts of the transcript.
           
-          Your answer must be in the following JSON format:
-          {"text": <TEXT>, "summary": <SUMMARY>}`,
-        },
-        {
-          role: "user",
-          content: `Transcript: ${transcript.slice(transcript.length - 2000)}`,
-        },
-      ],
-    });
+              Your answer must be in the following JSON format:
+              {"text": <TEXT>, "summary": <SUMMARY>}`,
+            },
+            {
+              role: "user",
+              content: `Transcript: ${transcript.slice(transcript.length - 2000)}`,
+            },
+          ],
+        });
 
-    return this.parseTalkingPoint(completion.choices[0].message.content);
+        return this.parseTalkingPoint(completion.choices[0].message.content);
+      },
+      {
+        shouldRetry: (err) => !(err instanceof OpenAI.AuthenticationError)
+      },
+    );
   }
 
   parseTalkingPoint(json: string | null): TalkingPoint {

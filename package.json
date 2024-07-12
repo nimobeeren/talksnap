@@ -23,6 +23,7 @@
     "dedent": "^1.5.3",
     "lucide-react": "^0.397.0",
     "openai": "^4.52.1",
+    "p-retry": "^6.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.1",
