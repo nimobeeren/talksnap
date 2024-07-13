@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import OpenAI from "openai";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -33,7 +34,24 @@ export function ApiKeyDialog({
     defaultValues: { apiKey: apiKey ?? "" },
   });
 
-  function onSubmit(values: z.infer<typeof schema>) {
+  async function onSubmit(values: z.infer<typeof schema>) {
+    const openai = new OpenAI({
+      apiKey: values.apiKey,
+      dangerouslyAllowBrowser: true,
+    });
+    try {
+      await openai.models.list();
+    } catch (err) {
+      if (err instanceof OpenAI.AuthenticationError) {
+        form.setError("apiKey", {
+          type: "custom",
+          message: "Incorrect API key",
+        });
+        return;
+      } else {
+        throw err;
+      }
+    }
     onApiKeySubmit(values.apiKey);
     setIsOpen(false);
   }
@@ -42,7 +60,7 @@ export function ApiKeyDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {/* Need to set `font-emoji` to ensure symbols render as emoji instead of plain unicode glyph */}
-        <Button variant="outline" className="font-emoji space-x-1 px-2">
+        <Button variant="outline" className="space-x-1 px-2 font-emoji">
           <span aria-label="key">🔑</span>
           {apiKey ? (
             <span aria-label="checkmark">✅</span>
