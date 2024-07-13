@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "react-use";
-
 import { AI } from "./ai";
 import { ApiKeyDialog } from "./components/api-key-dialog";
 import { Transcript } from "./components/transcript";
@@ -51,7 +50,7 @@ function App() {
               transcriptionResults={transcriptionResults}
               snaps={snaps}
               highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
-              className="h-full w-full overflow-y-auto"
+              className="h-full w-full"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-center">

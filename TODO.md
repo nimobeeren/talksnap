@@ -1,4 +1,3 @@
-- Auto-scroll transcript
 - Investigate jittery transcription results
 - Reduce max line length
 - Check OpenAI key on submit
