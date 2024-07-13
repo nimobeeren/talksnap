@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2Icon } from "lucide-react";
+import OpenAI from "openai";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-import OpenAI from "openai";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -97,7 +97,12 @@ export function ApiKeyDialog({
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting && (
+                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Submit
+            </Button>
           </form>
         </Form>
       </DialogContent>
