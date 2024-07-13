@@ -35,23 +35,27 @@ export function ApiKeyDialog({
   });
 
   async function onSubmit(values: z.infer<typeof schema>) {
-    const openai = new OpenAI({
-      apiKey: values.apiKey,
-      dangerouslyAllowBrowser: true,
-    });
-    try {
-      await openai.models.list();
-    } catch (err) {
-      if (err instanceof OpenAI.AuthenticationError) {
-        form.setError("apiKey", {
-          type: "custom",
-          message: "Incorrect API key",
-        });
-        return;
-      } else {
-        throw err;
+    // If an API key is given, check if it works
+    if (values.apiKey) {
+      const openai = new OpenAI({
+        apiKey: values.apiKey,
+        dangerouslyAllowBrowser: true,
+      });
+      try {
+        await openai.models.list();
+      } catch (err) {
+        if (err instanceof OpenAI.AuthenticationError) {
+          form.setError("apiKey", {
+            type: "custom",
+            message: "Incorrect API key",
+          });
+          return;
+        } else {
+          throw err;
+        }
       }
     }
+
     onApiKeySubmit(values.apiKey);
     setIsOpen(false);
   }
