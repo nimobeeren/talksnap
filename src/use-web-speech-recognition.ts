@@ -1,63 +1,79 @@
 import dedent from "dedent";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { useTranscription } from "./use-transcription";
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function createSpeechRecognition() {
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  return recognition;
+}
 
 /**
  * Transcribes voice from the device microphone using the Web Speech API.
  * This is a lower-level interface. A higher-level interface is available in {@link useTranscription}.
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
  */
-export function useWebSpeechRecognition({
-  enabled,
-}: {
-  enabled: boolean;
-}): SpeechRecognitionResultList | null {
-  const speechRecognition = useMemo(() => {
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    return recognition;
-  }, []);
+export function useWebSpeechRecognition({ enabled }: { enabled: boolean }) {
+  const [speechRecognition, setSpeechRecognition] = useState(
+    createSpeechRecognition,
+  );
 
   const [results, setResults] = useState<SpeechRecognitionResultList | null>(
     null,
   );
 
-  // While transcribing, listen for speech and update the transcription state
-  useEffect(() => {
-    const handleResult = (event: SpeechRecognitionEvent) => {
-      setResults(event.results);
-    };
+  const handleResult = useCallback((event: SpeechRecognitionEvent) => {
+    setResults(event.results);
+  }, []);
 
-    const startTranscription = () => {
+  const startTranscription = useCallback(
+    (sr: SpeechRecognition) => {
       setResults(null);
-      speechRecognition.addEventListener("result", handleResult);
-      speechRecognition.start();
-    };
+      sr.addEventListener("result", handleResult);
+      sr.start();
+    },
+    [handleResult],
+  );
 
-    const stopTranscription = () => {
-      if (speechRecognition) {
-        speechRecognition.removeEventListener("result", handleResult);
-        speechRecognition.stop();
-      }
-    };
+  const stopTranscription = useCallback(
+    (sr: SpeechRecognition) => {
+      sr.removeEventListener("result", handleResult);
+      sr.stop();
+    },
+    [handleResult],
+  );
 
+  // Start and stop transcription to reflect enabled prop
+  useEffect(() => {
     if (enabled) {
-      startTranscription();
+      startTranscription(speechRecognition);
     } else {
-      stopTranscription();
+      stopTranscription(speechRecognition);
     }
 
     return () => {
-      stopTranscription();
+      stopTranscription(speechRecognition);
     };
-  }, [speechRecognition, enabled]);
+  }, [enabled, speechRecognition, startTranscription, stopTranscription]);
 
-  return results;
+  return {
+    results,
+    clear: () => {
+      if (enabled) {
+        stopTranscription(speechRecognition);
+      }
+      const newSpeechRecognition = createSpeechRecognition();
+      setSpeechRecognition(newSpeechRecognition);
+      if (enabled) {
+        startTranscription(newSpeechRecognition);
+      }
+    },
+  };
 }
 
 // @ts-ignore

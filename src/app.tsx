@@ -22,7 +22,10 @@ function App() {
     null,
   );
 
-  const currentTranscriptionResults = useTranscription({
+  const {
+    results: currentTranscriptionResults,
+    clear: clearCurrentTranscriptionResults,
+  } = useTranscription({
     enabled: isTranscribing,
   });
   const [oldTranscriptionResults, setOldTranscriptionResults] = useState<
@@ -32,6 +35,8 @@ function App() {
     ...oldTranscriptionResults,
     ...currentTranscriptionResults,
   ];
+  console.log(transcriptionResults.length);
+  console.log(transcriptionResults);
 
   // TODO: probably move this to useTranscription
   // When a new transcription is started, save the current transcription results in state.
@@ -137,6 +142,14 @@ function App() {
             }}
           >
             Snap!
+          </Button>
+          <Button
+            onClick={async () => {
+              await clearCurrentTranscriptionResults();
+              setOldTranscriptionResults([]);
+            }}
+          >
+            Clear
           </Button>
         </div>
         <div className="flex grow basis-0 justify-end">

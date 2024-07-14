@@ -21,11 +21,11 @@ function mapResults(
 /**
  * High-level interface for transcribing voice from the device microphone.
  */
-export function useTranscription({
-  enabled,
-}: {
-  enabled: boolean;
-}): TranscriptionResult[] {
-  const webResults = useWebSpeechRecognition({ enabled });
-  return webResults ? mapResults(webResults) : [];
+export function useTranscription({ enabled }: { enabled: boolean }) {
+  const web = useWebSpeechRecognition({ enabled });
+  const results = web.results ? mapResults(web.results) : [];
+  return {
+    results,
+    clear: web.clear,
+  };
 }
