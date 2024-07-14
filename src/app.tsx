@@ -33,6 +33,7 @@ function App() {
     ...currentTranscriptionResults,
   ];
 
+  // TODO: probably move this to useTranscription
   // When a new transcription is started, save the current transcription results in state.
   // This is useful because transcription results are cleared when starting transcription.
   useEffect(() => {
@@ -41,10 +42,13 @@ function App() {
       isTranscribing &&
       currentTranscriptionResults.length > 0
     ) {
-      setOldTranscriptionResults((prev) => [
-        ...prev,
-        ...currentTranscriptionResults,
-      ]);
+      setOldTranscriptionResults((prev) => {
+        return [
+          ...prev,
+          ...currentTranscriptionResults,
+          { transcript: " ", isFinal: true }, // add a break between transcription sessions
+        ];
+      });
     }
   }, [prevIsTranscribing, isTranscribing, currentTranscriptionResults]);
 
