@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocalStorage } from "react-use";
+import { useLocalStorage, usePrevious } from "react-use";
 import { AI } from "./ai";
 import { ApiKeyDialog } from "./components/api-key-dialog";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
-import { useTranscription } from "./use-transcription";
+import {
+  useTranscription,
+  type TranscriptionResult,
+} from "./use-transcription";
+
+// TODO: use a statemachine because the different `prev` states are confusing
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const prevIsTranscribing = usePrevious(isTranscribing);
 
   // Snaps are talking points that the listener wants to remember
   const [snaps, setSnaps] = useState<TalkingPoint[]>([]);
@@ -16,16 +22,31 @@ function App() {
     null,
   );
 
-  // Clear snaps when transcribing starts
-  useEffect(() => {
-    if (isTranscribing) {
-      setSnaps([]);
-    }
-  }, [isTranscribing]);
-
-  const transcriptionResults = useTranscription({
+  const currentTranscriptionResults = useTranscription({
     enabled: isTranscribing,
   });
+  const [oldTranscriptionResults, setOldTranscriptionResults] = useState<
+    TranscriptionResult[]
+  >([]);
+  const transcriptionResults = [
+    ...oldTranscriptionResults,
+    ...currentTranscriptionResults,
+  ];
+
+  // When a new transcription is started, save the current transcription results in state.
+  // This is useful because transcription results are cleared when starting transcription.
+  useEffect(() => {
+    if (
+      !prevIsTranscribing &&
+      isTranscribing &&
+      currentTranscriptionResults.length > 0
+    ) {
+      setOldTranscriptionResults((prev) => [
+        ...prev,
+        ...currentTranscriptionResults,
+      ]);
+    }
+  }, [prevIsTranscribing, isTranscribing, currentTranscriptionResults]);
 
   const [openAiKey, setOpenAiKey] = useLocalStorage<string>(
     "openai-api-key",
