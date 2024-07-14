@@ -1,20 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocalStorage, usePrevious } from "react-use";
+import { useMemo, useState } from "react";
+import { useLocalStorage } from "react-use";
 import { AI } from "./ai";
 import { ApiKeyDialog } from "./components/api-key-dialog";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
-import {
-  useTranscription,
-  type TranscriptionResult,
-} from "./use-transcription";
-
-// TODO: use a statemachine because the different `prev` states are confusing
+import { useTranscription } from "./use-transcription";
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const prevIsTranscribing = usePrevious(isTranscribing);
 
   // Snaps are talking points that the listener wants to remember
   const [snaps, setSnaps] = useState<TalkingPoint[]>([]);
@@ -22,35 +16,9 @@ function App() {
     null,
   );
 
-  const currentTranscriptionResults = useTranscription({
+  const transcriptionResults = useTranscription({
     enabled: isTranscribing,
   });
-  const [oldTranscriptionResults, setOldTranscriptionResults] = useState<
-    TranscriptionResult[]
-  >([]);
-  const transcriptionResults = [
-    ...oldTranscriptionResults,
-    ...currentTranscriptionResults,
-  ];
-
-  // TODO: probably move this to useTranscription
-  // When a new transcription is started, save the current transcription results in state.
-  // This is useful because transcription results are cleared when starting transcription.
-  useEffect(() => {
-    if (
-      !prevIsTranscribing &&
-      isTranscribing &&
-      currentTranscriptionResults.length > 0
-    ) {
-      setOldTranscriptionResults((prev) => {
-        return [
-          ...prev,
-          ...currentTranscriptionResults,
-          { transcript: " ", isFinal: true }, // add a break between transcription sessions
-        ];
-      });
-    }
-  }, [prevIsTranscribing, isTranscribing, currentTranscriptionResults]);
 
   const [openAiKey, setOpenAiKey] = useLocalStorage<string>(
     "openai-api-key",
