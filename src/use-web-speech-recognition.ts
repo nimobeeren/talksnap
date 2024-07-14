@@ -1,10 +1,16 @@
 import dedent from "dedent";
 import { useEffect, useMemo, useState } from "react";
+import type { useTranscription } from "./use-transcription";
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
-export function useSpeechRecognition({
+/**
+ * Transcribes voice from the device microphone using the Web Speech API.
+ * This is a lower-level interface. A higher-level interface is available in {@link useTranscription}.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
+ */
+export function useWebSpeechRecognition({
   enabled,
 }: {
   enabled: boolean;
@@ -17,27 +23,25 @@ export function useSpeechRecognition({
     return recognition;
   }, []);
 
-  const [transcriptionResults, setTranscriptionResults] =
-    useState<SpeechRecognitionResultList | null>(null);
+  const [results, setResults] = useState<SpeechRecognitionResultList | null>(
+    null,
+  );
 
   // While transcribing, listen for speech and update the transcription state
   useEffect(() => {
-    const handleTranscriptionResult = (event: SpeechRecognitionEvent) => {
-      setTranscriptionResults(event.results);
+    const handleResult = (event: SpeechRecognitionEvent) => {
+      setResults(event.results);
     };
 
     const startTranscription = () => {
-      setTranscriptionResults(null);
-      speechRecognition.addEventListener("result", handleTranscriptionResult);
+      setResults(null);
+      speechRecognition.addEventListener("result", handleResult);
       speechRecognition.start();
     };
 
     const stopTranscription = () => {
       if (speechRecognition) {
-        speechRecognition.removeEventListener(
-          "result",
-          handleTranscriptionResult,
-        );
+        speechRecognition.removeEventListener("result", handleResult);
         speechRecognition.stop();
       }
     };
@@ -53,11 +57,11 @@ export function useSpeechRecognition({
     };
   }, [speechRecognition, enabled]);
 
-  return transcriptionResults;
+  return results;
 }
 
 // @ts-ignore
-const MOCK_TRANSCRIPTION_RESULTS = [
+const MOCK_RESULTS = [
   {
     isFinal: true,
     0: {

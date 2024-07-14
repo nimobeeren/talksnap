@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocalStorage } from "react-use";
 import { AI } from "./ai";
 import { ApiKeyDialog } from "./components/api-key-dialog";
 import { Transcript } from "./components/transcript";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
-import { useSpeechRecognition } from "./use-speech-recognition";
+import { useTranscription } from "./use-transcription";
 
 function App() {
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -16,14 +16,7 @@ function App() {
     null,
   );
 
-  // Clear snaps when transcribing starts
-  useEffect(() => {
-    if (isTranscribing) {
-      setSnaps([]);
-    }
-  }, [isTranscribing]);
-
-  const transcriptionResults = useSpeechRecognition({
+  const transcriptionResults = useTranscription({
     enabled: isTranscribing,
   });
 
@@ -37,8 +30,8 @@ function App() {
     [openAiKey],
   );
 
-  const transcript = Array.from(transcriptionResults || [])
-    .map((result) => result[0].transcript)
+  const transcript = transcriptionResults
+    .map((result) => result.transcript)
     .join("");
 
   return (
@@ -60,7 +53,7 @@ function App() {
         </div>
         <div className="w-1/2 pl-8">
           {snaps.length > 0 ? (
-            <ul className="overflow-y-auto list-disc list-inside">
+            <ul className="list-inside list-disc overflow-y-auto">
               {snaps.map((snap) => (
                 <li
                   key={snap.summary}
