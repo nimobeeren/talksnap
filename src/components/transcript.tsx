@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { splitTranscript } from "@/string-utils";
 import { TalkingPoint } from "@/types";
+import type { TranscriptionResult } from "@/use-transcription";
 import { useEffect, useRef } from "react";
 
 export function Transcript({
@@ -9,13 +10,13 @@ export function Transcript({
   highlightedSnaps,
   className,
 }: {
-  transcriptionResults: SpeechRecognitionResultList | null;
+  transcriptionResults: TranscriptionResult[];
   snaps: TalkingPoint[];
   highlightedSnaps: TalkingPoint[];
   className?: string;
 }) {
-  const transcript = Array.from(transcriptionResults || [])
-    .map((result) => result[0].transcript)
+  const transcript = transcriptionResults
+    .map((result) => result.transcript)
     .join("");
   const segments = splitTranscript(transcript, snaps);
 
