@@ -97,13 +97,8 @@ export function useTranscription(): {
     }),
   );
 
-  const results = [
-    ...state.context.oldResults,
-    ...state.context.currentResults,
-  ];
-
   return {
-    results,
+    results: [...state.context.oldResults, ...state.context.currentResults],
     start: () => {
       send({ type: "START" });
     },
