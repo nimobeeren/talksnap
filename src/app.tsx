@@ -8,17 +8,13 @@ import { TalkingPoint } from "./types";
 import { useTranscription } from "./use-transcription";
 
 function App() {
-  const [isTranscribing, setIsTranscribing] = useState(false);
-
   // Snaps are talking points that the listener wants to remember
   const [snaps, setSnaps] = useState<TalkingPoint[]>([]);
   const [highlightedSnap, setHighlightedSnap] = useState<TalkingPoint | null>(
     null,
   );
 
-  const transcriptionResults = useTranscription({
-    enabled: isTranscribing,
-  });
+  const { results, start, stop, state: transcriptionState } = useTranscription();
 
   const [openAiKey, setOpenAiKey] = useLocalStorage<string>(
     "openai-api-key",
@@ -30,7 +26,7 @@ function App() {
     [openAiKey],
   );
 
-  const transcript = transcriptionResults
+  const transcript = results
     .map((result) => result.transcript)
     .join("");
 
@@ -38,9 +34,9 @@ function App() {
     <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
       <div className="mb-8 flex min-h-0 w-full grow text-gray-900">
         <div className="w-1/2 border-r border-gray-300 pr-8">
-          {transcript || isTranscribing ? (
+          {transcript || transcriptionState === "transcribing" ? (
             <Transcript
-              transcriptionResults={transcriptionResults}
+              transcriptionResults={results}
               snaps={snaps}
               highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
               className="h-full w-full"
@@ -81,10 +77,16 @@ function App() {
         </div>
         <div className="flex gap-4">
           <Button
-            onClick={() => setIsTranscribing((prev) => !prev)}
-            variant={isTranscribing ? "outline" : "default"}
+            onClick={() => {
+              if (transcriptionState === "transcribing") {
+                stop();
+              } else {
+                start();
+              }
+            }}
+            variant={transcriptionState === "transcribing" ? "outline" : "default"}
           >
-            {isTranscribing ? "Stop Transcription" : "Start Transcription"}
+            {transcriptionState === "transcribing" ? "Stop Transcription" : "Start Transcription"}
           </Button>
           <Button
             disabled={!ai || !transcript}

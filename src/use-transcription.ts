@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { usePrevious } from "react-use";
+import { useMemo, useState } from "react";
+import { useMachine } from "@xstate/react";
+import { setup } from "xstate";
 import { useWebSpeechRecognition } from "./use-web-speech-recognition";
 
 /** A piece of a transcript. */
@@ -20,40 +21,72 @@ function mapResults(
   }));
 }
 
-// TODO: use a statemachine because the different `prev` states are confusing
+const transcriptionMachine = setup({
+  context: {} as {
+    oldResults: TranscriptionResult[],
+    currentResults: TranscriptionResult[],
+  },
+    events: {} as
+      | { type: "start" }
+      | { type: "stop" }
+      | { type: "newResult"; results: TranscriptionResult[] },
+}).createMachine({
+  id: "transcription",
+  initial: "idle",
+  states: {
+    idle: {
+      on: {
+        START: "transcribing",
+      },
+    },
+    transcribing: {
+      entry: assign({
+        oldResults: (context) => [
+          ...context.oldResults,
+          ...context.currentResults,
+          { transcript: " ", isFinal: true },
+        ],
+        currentResults: () => [],
+      }),
+      on: {
+        STOP: "idle",
+        RESULTS: {
+          actions: assign({
+            currentResults: (_, event) => event.results,
+          }),
+        },
+      },
+    },
+  },
+});
 
-/**
- * High-level interface for transcribing voice from the device microphone.
- */
-export function useTranscription({
-  enabled,
-}: {
-  enabled: boolean;
-}): TranscriptionResult[] {
-  const prevEnabled = usePrevious(enabled);
+export function useTranscription(): {
+  results: TranscriptionResult[];
+  start: () => void;
+  stop: () => void;
+  state: string;
+} {
+  const [state, send] = useMachine(transcriptionMachine);
 
-  const currentWebResults = useWebSpeechRecognition({ enabled });
-  const currentResults = useMemo(
-    () => (currentWebResults ? mapResults(currentWebResults) : []),
-    [currentWebResults],
-  );
+  const { start, stop } = useWebSpeechRecognition({
+    onResult: (webResults) => {
+      const currentResults = mapResults(webResults);
+      send({ type: "RESULTS", results: currentResults });
+    },
+  });
 
-  const [oldResults, setOldResults] = useState<TranscriptionResult[]>([]);
-  const transcriptionResults = [...oldResults, ...currentResults];
+  const results = [...state.context.oldResults, ...state.context.currentResults];
 
-  // When a new transcription is started, save the current transcription results in state.
-  // This is useful because transcription results are cleared when starting transcription.
-  useEffect(() => {
-    if (!prevEnabled && enabled && currentResults.length > 0) {
-      setOldResults((prev) => {
-        return [
-          ...prev,
-          ...currentResults,
-          { transcript: " ", isFinal: true }, // add a break between transcription sessions
-        ];
-      });
-    }
-  }, [prevEnabled, enabled, currentResults]);
-
-  return transcriptionResults;
+  return {
+    results,
+    start: () => {
+      send("START");
+      start();
+    },
+    stop: () => {
+      send("STOP");
+      stop();
+    },
+    state: state.value,
+  };
 }
