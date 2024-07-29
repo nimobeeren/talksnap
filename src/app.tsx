@@ -14,12 +14,7 @@ function App() {
     null,
   );
 
-  const {
-    results,
-    start,
-    stop,
-    state: transcriptionState,
-  } = useTranscription();
+  const transcription = useTranscription();
 
   const [openAiKey, setOpenAiKey] = useLocalStorage<string>(
     "openai-api-key",
@@ -31,15 +26,17 @@ function App() {
     [openAiKey],
   );
 
-  const transcript = results.map((result) => result.transcript).join("");
+  const transcript = transcription.results
+    .map((result) => result.transcript)
+    .join("");
 
   return (
     <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
       <div className="mb-8 flex min-h-0 w-full grow text-gray-900">
         <div className="w-1/2 border-r border-gray-300 pr-8">
-          {transcript || transcriptionState === "transcribing" ? (
+          {transcript || transcription.state === "transcribing" ? (
             <Transcript
-              transcriptionResults={results}
+              transcriptionResults={transcription.results}
               snaps={snaps}
               highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
               className="h-full w-full"
@@ -81,17 +78,17 @@ function App() {
         <div className="flex gap-4">
           <Button
             onClick={() => {
-              if (transcriptionState === "transcribing") {
-                stop();
+              if (transcription.state === "transcribing") {
+                transcription.stop();
               } else {
-                start();
+                transcription.start();
               }
             }}
             variant={
-              transcriptionState === "transcribing" ? "outline" : "default"
+              transcription.state === "transcribing" ? "outline" : "default"
             }
           >
-            {transcriptionState === "transcribing"
+            {transcription.state === "transcribing"
               ? "Stop Transcription"
               : "Start Transcription"}
           </Button>
