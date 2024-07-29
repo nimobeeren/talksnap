@@ -31,6 +31,11 @@ const transcriptionMachine = setup({
       | { type: "STOP" }
       | { type: "RESULTS"; results: TranscriptionResult[] },
   },
+  actions: {
+    // TODO: find a way to force the caller to provide these actions
+    startTranscription: () => {},
+    stopTranscription: () => {},
+  },
 }).createMachine({
   id: "transcription",
   initial: "idle",
@@ -41,7 +46,10 @@ const transcriptionMachine = setup({
   states: {
     idle: {
       on: {
-        START: "transcribing",
+        START: {
+          target: "transcribing",
+          actions: [{ type: "startTranscription" }],
+        },
       },
     },
     transcribing: {
@@ -54,7 +62,10 @@ const transcriptionMachine = setup({
         currentResults: () => [],
       }),
       on: {
-        STOP: "idle",
+        STOP: {
+          target: "idle",
+          actions: [{ type: "stopTranscription" }],
+        },
         RESULTS: {
           actions: assign({
             currentResults: ({ event }) => event.results,
@@ -71,13 +82,20 @@ export function useTranscription(): {
   stop: () => void;
   state: string;
 } {
-  const [state, send] = useMachine(transcriptionMachine);
-
   const { start, stop } = useWebSpeechRecognition({
     onResult: (webResults) => {
       send({ type: "RESULTS", results: mapResults(webResults) });
     },
   });
+
+  const [state, send] = useMachine(
+    transcriptionMachine.provide({
+      actions: {
+        startTranscription: start,
+        stopTranscription: stop,
+      },
+    }),
+  );
 
   const results = [
     ...state.context.oldResults,
@@ -88,11 +106,9 @@ export function useTranscription(): {
     results,
     start: () => {
       send({ type: "START" });
-      start();
     },
     stop: () => {
       send({ type: "STOP" });
-      stop();
     },
     state: state.value,
   };
