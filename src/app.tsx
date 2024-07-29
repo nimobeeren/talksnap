@@ -14,7 +14,12 @@ function App() {
     null,
   );
 
-  const { results, start, stop, state: transcriptionState } = useTranscription();
+  const {
+    results,
+    start,
+    stop,
+    state: transcriptionState,
+  } = useTranscription();
 
   const [openAiKey, setOpenAiKey] = useLocalStorage<string>(
     "openai-api-key",
@@ -26,9 +31,7 @@ function App() {
     [openAiKey],
   );
 
-  const transcript = results
-    .map((result) => result.transcript)
-    .join("");
+  const transcript = results.map((result) => result.transcript).join("");
 
   return (
     <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
@@ -84,9 +87,13 @@ function App() {
                 start();
               }
             }}
-            variant={transcriptionState === "transcribing" ? "outline" : "default"}
+            variant={
+              transcriptionState === "transcribing" ? "outline" : "default"
+            }
           >
-            {transcriptionState === "transcribing" ? "Stop Transcription" : "Start Transcription"}
+            {transcriptionState === "transcribing"
+              ? "Stop Transcription"
+              : "Start Transcription"}
           </Button>
           <Button
             disabled={!ai || !transcript}
