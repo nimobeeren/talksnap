@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
 import { useMachine } from "@xstate/react";
-import { setup } from "xstate";
+import { assign, setup } from "xstate";
 import { useWebSpeechRecognition } from "./use-web-speech-recognition";
 
 /** A piece of a transcript. */
@@ -22,17 +21,23 @@ function mapResults(
 }
 
 const transcriptionMachine = setup({
-  context: {} as {
-    oldResults: TranscriptionResult[],
-    currentResults: TranscriptionResult[],
-  },
+  types: {
+    context: {} as {
+      oldResults: TranscriptionResult[];
+      currentResults: TranscriptionResult[];
+    },
     events: {} as
-      | { type: "start" }
-      | { type: "stop" }
-      | { type: "newResult"; results: TranscriptionResult[] },
+      | { type: "START" }
+      | { type: "STOP" }
+      | { type: "RESULTS"; results: TranscriptionResult[] },
+  },
 }).createMachine({
   id: "transcription",
   initial: "idle",
+  context: {
+    oldResults: [],
+    currentResults: [],
+  },
   states: {
     idle: {
       on: {
@@ -41,7 +46,7 @@ const transcriptionMachine = setup({
     },
     transcribing: {
       entry: assign({
-        oldResults: (context) => [
+        oldResults: ({ context }) => [
           ...context.oldResults,
           ...context.currentResults,
           { transcript: " ", isFinal: true },
@@ -52,7 +57,7 @@ const transcriptionMachine = setup({
         STOP: "idle",
         RESULTS: {
           actions: assign({
-            currentResults: (_, event) => event.results,
+            currentResults: ({ event }) => event.results,
           }),
         },
       },
@@ -70,21 +75,23 @@ export function useTranscription(): {
 
   const { start, stop } = useWebSpeechRecognition({
     onResult: (webResults) => {
-      const currentResults = mapResults(webResults);
-      send({ type: "RESULTS", results: currentResults });
+      send({ type: "RESULTS", results: mapResults(webResults) });
     },
   });
 
-  const results = [...state.context.oldResults, ...state.context.currentResults];
+  const results = [
+    ...state.context.oldResults,
+    ...state.context.currentResults,
+  ];
 
   return {
     results,
     start: () => {
-      send("START");
+      send({ type: "START" });
       start();
     },
     stop: () => {
-      send("STOP");
+      send({ type: "STOP" });
       stop();
     },
     state: state.value,
