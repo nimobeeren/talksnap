@@ -19,10 +19,16 @@ interface DevtoolsState {
 }
 
 export const useDevtoolsStore = create<DevtoolsState>((set) => ({
-  isEnabled: false,
-  speed: 3,
-  setEnabled: (enabled) => set({ isEnabled: enabled }),
-  setSpeed: (speed) => set({ speed }),
+  isEnabled: localStorage.getItem("fakeTranscriptionEnabled") === "true",
+  speed: Number(localStorage.getItem("fakeTranscriptionSpeed")) ?? 3,
+  setEnabled: (enabled) => {
+    localStorage.setItem("fakeTranscriptionEnabled", String(enabled));
+    set({ isEnabled: enabled });
+  },
+  setSpeed: (speed) => {
+    localStorage.setItem("fakeTranscriptionSpeed", String(speed));
+    set({ speed });
+  },
 }));
 
 export function TranscriptionDevtools() {
