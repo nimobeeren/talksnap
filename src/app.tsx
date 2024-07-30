@@ -3,6 +3,7 @@ import { useLocalStorage } from "react-use";
 import { AI } from "./ai";
 import { ApiKeyDialog } from "./components/api-key-dialog";
 import { Transcript } from "./components/transcript";
+import { TranscriptionDevtools } from "./components/transcription-devtools";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
 import { useTranscription } from "./use-transcription";
@@ -120,6 +121,7 @@ function App() {
           />
         </div>
       </div>
+      {process.env.NODE_ENV === "development" && <TranscriptionDevtools />}
     </div>
   );
 }

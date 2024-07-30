@@ -1,6 +1,8 @@
 import { useMachine } from "@xstate/react";
 import { assign, setup } from "xstate";
 import { useWebSpeechRecognition } from "./use-web-speech-recognition";
+import { useFakeTranscription } from "./use-fake-transcription";
+import { useDevtoolsStore } from "./components/transcription-devtools";
 
 /** A piece of a transcript. */
 export interface TranscriptionResult {
@@ -82,17 +84,38 @@ export function useTranscription(): {
   stop: () => void;
   state: string;
 } {
-  const { start, stop } = useWebSpeechRecognition({
+  const { start: startWeb, stop: stopWeb } = useWebSpeechRecognition({
     onResult: (webResults) => {
       send({ type: "RESULTS", results: mapResults(webResults) });
     },
   });
 
+  const { start: startFake, stop: stopFake } = useFakeTranscription({
+    onResult: (fakeResults) => {
+      send({ type: "RESULTS", results: fakeResults });
+    },
+    speed: useDevtoolsStore.getState().speed,
+  });
+
   const [state, send] = useMachine(
     transcriptionMachine.provide({
       actions: {
-        startTranscription: start,
-        stopTranscription: stop,
+        startTranscription: () => {
+          const { isEnabled } = useDevtoolsStore.getState();
+          if (isEnabled) {
+            startFake();
+          } else {
+            startWeb();
+          }
+        },
+        stopTranscription: () => {
+          const { isEnabled } = useDevtoolsStore.getState();
+          if (isEnabled) {
+            stopFake();
+          } else {
+            stopWeb();
+          }
+        },
       },
     }),
   );
