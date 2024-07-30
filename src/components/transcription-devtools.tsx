@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { useState } from "react";
+import { create } from "zustand";
 import { Button } from "./ui/button";
-import create from "zustand";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 
 interface DevtoolsState {
   isEnabled: boolean;
