@@ -32,7 +32,7 @@ const transcriptionMachine = setup({
       | { type: "RESULTS"; results: TranscriptionResult[] },
   },
   actions: {
-    // TODO: find a way to force the caller to provide these actions
+    // TODO: find a way to force the caller to provide these actions, i.e. raise an error when one is missing
     startTranscription: () => {},
     stopTranscription: () => {},
   },
