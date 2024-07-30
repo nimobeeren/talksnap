@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { TranscriptionResult } from "./use-transcription";
 import { faker } from "@faker-js/faker";
+import { useEffect, useState } from "react";
+import { TranscriptionResult } from "./use-transcription";
 
 export function useFakeTranscription({
   onResult,
@@ -13,23 +13,39 @@ export function useFakeTranscription({
   stop: () => void;
 } {
   const [isRunning, setIsRunning] = useState(false);
+  const [results, setResults] = useState<TranscriptionResult[]>([]);
 
   useEffect(() => {
     if (!isRunning) return;
 
     const interval = setInterval(() => {
-      const fakeResult: TranscriptionResult = {
-        transcript: faker.lorem.sentence(),
+      const newResults = results;
+
+      // Add a separator if there are existing results
+      if (newResults.length > 0) {
+        newResults.push({
+          transcript: " ",
+          isFinal: true,
+        });
+      }
+      // Add a new fake result
+      newResults.push({
+        transcript: faker.lorem.word(),
         isFinal: true,
-      };
-      onResult([fakeResult]);
+      });
+
+      setResults(newResults);
+      onResult(newResults);
     }, 1000 / speed);
 
     return () => clearInterval(interval);
-  }, [isRunning, speed, onResult]);
+  }, [isRunning, speed, onResult, results]);
 
   return {
-    start: () => setIsRunning(true),
+    start: () => {
+      setResults([]);
+      setIsRunning(true);
+    },
     stop: () => setIsRunning(false),
   };
 }

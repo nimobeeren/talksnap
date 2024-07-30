@@ -20,7 +20,7 @@ interface DevtoolsState {
 
 export const useDevtoolsStore = create<DevtoolsState>((set) => ({
   isEnabled: false,
-  speed: 1,
+  speed: 3,
   setEnabled: (enabled) => set({ isEnabled: enabled }),
   setSpeed: (speed) => set({ speed }),
 }));
@@ -60,7 +60,7 @@ export function TranscriptionDevtools() {
             <span className="shrink-0 tabular-nums">Speed ({speed})</span>
             <Slider
               min={1}
-              max={9}
+              max={50}
               value={[speed]}
               onValueChange={(value) => {
                 const newSpeed = value[0];
