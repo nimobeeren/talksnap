@@ -8,8 +8,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { Slider } from "./ui/slider";
-import { Switch } from "./ui/switch";
 
 interface DevtoolsState {
   isEnabled: boolean;
@@ -43,23 +41,25 @@ export function TranscriptionDevtools() {
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-4">
-          <label className="flex items-center space-x-2">
-            <Switch
+          <label>
+            <input
+              type="checkbox"
               checked={isEnabled}
-              onCheckedChange={(checked) => {
-                setEnabled(checked);
+              onChange={(e) => {
+                setEnabled(e.target.checked);
               }}
             />
-            <span>Enabled</span>
+            Enabled
           </label>
-          <label className="flex items-center space-x-2">
-            <span>Speed:</span>
-            <Slider
-              min={1}
-              max={10}
-              value={[speed]}
-              onValueChange={(value) => {
-                const newSpeed = value[0];
+          <label>
+            Speed:
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={speed}
+              onChange={(e) => {
+                const newSpeed = Number(e.target.value);
                 setSpeed(newSpeed);
               }}
             />
