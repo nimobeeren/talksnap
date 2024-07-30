@@ -3,10 +3,10 @@ import { useLocalStorage } from "react-use";
 import { AI } from "./ai";
 import { ApiKeyDialog } from "./components/api-key-dialog";
 import { Transcript } from "./components/transcript";
+import { TranscriptionDevtools } from "./components/transcription-devtools";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
 import { useTranscription } from "./use-transcription";
-import { TranscriptionDevtools } from "./components/transcription-devtools";
 
 function App() {
   // Snaps are talking points that the listener wants to remember
@@ -121,7 +121,7 @@ function App() {
           />
         </div>
       </div>
-      <TranscriptionDevtools />
+      {process.env.NODE_ENV === "development" && <TranscriptionDevtools />}
     </div>
   );
 }
