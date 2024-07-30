@@ -1,6 +1,5 @@
 import dedent from "dedent";
-import { useEffect, useMemo, useState } from "react";
-import type { useTranscription } from "./use-transcription";
+import { useMemo, useEffect } from "react";
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -11,10 +10,13 @@ const SpeechRecognition =
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
  */
 export function useWebSpeechRecognition({
-  enabled,
+  onResult,
 }: {
-  enabled: boolean;
-}): SpeechRecognitionResultList | null {
+  onResult: (results: SpeechRecognitionResultList) => void;
+}): {
+  start: () => void;
+  stop: () => void;
+} {
   const speechRecognition = useMemo(() => {
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
@@ -23,41 +25,26 @@ export function useWebSpeechRecognition({
     return recognition;
   }, []);
 
-  const [results, setResults] = useState<SpeechRecognitionResultList | null>(
-    null,
-  );
-
-  // While transcribing, listen for speech and update the transcription state
   useEffect(() => {
     const handleResult = (event: SpeechRecognitionEvent) => {
-      setResults(event.results);
+      onResult(event.results);
     };
 
-    const startTranscription = () => {
-      setResults(null);
-      speechRecognition.addEventListener("result", handleResult);
-      speechRecognition.start();
-    };
-
-    const stopTranscription = () => {
-      if (speechRecognition) {
-        speechRecognition.removeEventListener("result", handleResult);
-        speechRecognition.stop();
-      }
-    };
-
-    if (enabled) {
-      startTranscription();
-    } else {
-      stopTranscription();
-    }
+    speechRecognition.addEventListener("result", handleResult);
 
     return () => {
-      stopTranscription();
+      speechRecognition.removeEventListener("result", handleResult);
     };
-  }, [speechRecognition, enabled]);
+  }, [speechRecognition, onResult]);
 
-  return results;
+  return {
+    start: () => {
+      speechRecognition.start();
+    },
+    stop: () => {
+      speechRecognition.stop();
+    },
+  };
 }
 
 // @ts-ignore
