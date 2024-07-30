@@ -31,8 +31,12 @@ export function TranscriptionDevtools() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="fixed left-4 top-4 h-8 w-8" variant="outline" aria-label="Devtools">
-          🔧
+        <Button
+          className="fixed bottom-4 left-4 h-8 w-8"
+          variant="outline"
+          aria-label="Devtools"
+        >
+          🧑🏼‍💻
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -53,10 +57,10 @@ export function TranscriptionDevtools() {
             <span>Enabled</span>
           </label>
           <label className="flex items-center space-x-2">
-            <span>Speed:</span>
+            <span className="shrink-0 tabular-nums">Speed ({speed})</span>
             <Slider
               min={1}
-              max={10}
+              max={9}
               value={[speed]}
               onValueChange={(value) => {
                 const newSpeed = value[0];
