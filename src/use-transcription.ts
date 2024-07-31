@@ -1,8 +1,8 @@
 import { useMachine } from "@xstate/react";
 import { assign, setup } from "xstate";
-import { useWebSpeechRecognition } from "./use-web-speech-recognition";
-import { useFakeTranscription } from "./use-fake-transcription";
 import { useDevtoolsStore } from "./components/transcription-devtools";
+import { useFakeAiTranscription } from "./use-fake-ai-transcription";
+import { useWebSpeechRecognition } from "./use-web-speech-recognition";
 
 /** A piece of a transcript. */
 export interface TranscriptionResult {
@@ -90,7 +90,7 @@ export function useTranscription(): {
     },
   });
 
-  const { start: startFake, stop: stopFake } = useFakeTranscription({
+  const { start: startFake, stop: stopFake } = useFakeAiTranscription({
     onResult: (fakeResults) => {
       send({ type: "RESULTS", results: fakeResults });
     },
