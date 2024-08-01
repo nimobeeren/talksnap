@@ -1,3 +1,4 @@
+import throttle from "p-throttle";
 import { useCallback, useEffect, useState } from "react";
 import { TranscriptionResult } from "./use-transcription";
 
@@ -44,12 +45,30 @@ export function useFakeAiTranscription({
       setAiSession(session);
     }
 
-    const stream = session.promptStreaming(
+    const stream: ReadableStream<string> = session.promptStreaming(
       "You are a conference speaker. Give a talk on software testing.",
     );
+    const reader = stream.getReader();
 
-    try {
-      for await (const chunk of stream) {
+    const next = throttle({ interval: 1000, limit: speed })(async () => {
+      try {
+        return await reader.read();
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "InvalidStateError") {
+          // This is okay, happens when destroying the session while streaming results
+          return { done: true, value: undefined };
+        } else {
+          throw e;
+        }
+      }
+    });
+    
+    // FIXME: sometimes this will keep running after stopping transcription
+    // This might be because the stream has already finished but there are still more chunks to be read
+    while (true) {
+      const { done, value: chunk } = await next();
+
+      if (chunk) {
         const processedChunk = String(chunk).replaceAll("\n", " ");
         onResult?.([
           {
@@ -58,14 +77,10 @@ export function useFakeAiTranscription({
           },
         ]);
       }
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "InvalidStateError") {
-        // This is okay, happens when destroying the session while streaming results
-      } else {
-        throw e;
-      }
+
+      if (done) break;
     }
-  }, [onResult, aiSession]);
+  }, [aiSession, speed, onResult]);
 
   const stop = useCallback(() => {
     aiSession?.destroy();
