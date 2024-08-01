@@ -84,6 +84,8 @@ export function useTranscription(): {
   stop: () => void;
   state: string;
 } {
+  const devtoolsState = useDevtoolsStore();
+
   const { start: startWeb, stop: stopWeb } = useWebSpeechRecognition({
     onResult: (webResults) => {
       send({ type: "RESULTS", results: mapResults(webResults) });
@@ -91,26 +93,25 @@ export function useTranscription(): {
   });
 
   const { start: startFake, stop: stopFake } = useFakeAiTranscription({
+    speed: devtoolsState.speed,
+    prompt: devtoolsState.prompt,
     onResult: (fakeResults) => {
       send({ type: "RESULTS", results: fakeResults });
     },
-    speed: useDevtoolsStore.getState().speed,
   });
 
   const [state, send] = useMachine(
     transcriptionMachine.provide({
       actions: {
         startTranscription: () => {
-          const { isEnabled } = useDevtoolsStore.getState();
-          if (isEnabled) {
+          if (useDevtoolsStore.getState().isEnabled) {
             startFake();
           } else {
             startWeb();
           }
         },
         stopTranscription: () => {
-          const { isEnabled } = useDevtoolsStore.getState();
-          if (isEnabled) {
+          if (useDevtoolsStore.getState().isEnabled) {
             stopFake();
           } else {
             stopWeb();

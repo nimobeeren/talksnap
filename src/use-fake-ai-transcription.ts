@@ -10,21 +10,25 @@ declare global {
   }
 }
 
-export function useFakeAiTranscription({
-  speed,
-  onResult,
-}: {
+export interface UseFakeAiTranscriptionOptions {
   /**
    * Maximum number of chunks per second. If this is faster than the AI can
    * generate, results will appear at the rate the AI generates them.
    */
   speed: number;
+  prompt: string;
   /**
    * Callback for when a new transcription result arrives. This is called with
    * all results since starting the transcription.
    */
   onResult?: (results: TranscriptionResult[]) => void;
-}): {
+}
+
+export function useFakeAiTranscription({
+  speed,
+  prompt,
+  onResult,
+}: UseFakeAiTranscriptionOptions): {
   start: () => void;
   stop: () => void;
 } {
@@ -45,9 +49,7 @@ export function useFakeAiTranscription({
       setAiSession(session);
     }
 
-    const stream: ReadableStream<string> = session.promptStreaming(
-      "You are a conference speaker. Give a talk on software testing.",
-    );
+    const stream: ReadableStream<string> = session.promptStreaming(prompt);
     const reader = stream.getReader();
 
     const next = throttle({ interval: 1000, limit: speed })(async () => {
@@ -62,7 +64,7 @@ export function useFakeAiTranscription({
         }
       }
     });
-    
+
     // FIXME: sometimes this will keep running after stopping transcription
     // This might be because the stream has already finished but there are still more chunks to be read
     while (true) {
@@ -80,7 +82,7 @@ export function useFakeAiTranscription({
 
       if (done) break;
     }
-  }, [aiSession, speed, onResult]);
+  }, [aiSession, prompt, speed, onResult]);
 
   const stop = useCallback(() => {
     aiSession?.destroy();
