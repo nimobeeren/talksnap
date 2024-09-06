@@ -1,40 +1,40 @@
 import { useMachine } from "@xstate/react";
 import { useEffect } from "react";
-import { assign, fromPromise, setup } from "xstate";
+import { assign, fromPromise, raise, setup } from "xstate";
 import { TranscriptionResult } from "./use-transcription";
 
-type AITextSession = any;
-
-declare global {
-  interface Window {
-    ai: any;
-  }
-}
+// TODO: use prompt
+// TODO: use speed
+// TODO: implement stop
+// TODO: maybe this should just export the machine instead of a hook?
 
 const machine = setup({
   types: {
     context: {} as {
-      stream?: AsyncIterable<string>;
+      reader?: ReadableStreamDefaultReader<string>;
       result?: string;
     },
-    events: {} as { type: "START" } | { type: "RESULT" } | { type: "FINISH" },
+    events: {} as
+      | { type: "START" }
+      | { type: "RESULT" }
+      | { type: "FINISH" }
+      | { type: "READ" }
+      | { type: "MORE" },
   },
   actors: {
-    createStream: fromPromise<AsyncIterable<string>, { prompt: string }>(
+    createReader: fromPromise<ReadableStreamDefaultReader<string>, { prompt: string }>(
       async ({ input }) => {
         const session = await window.ai.assistant.create();
-        return session.promptStreaming(input.prompt);
+        const stream = session.promptStreaming(input.prompt);
+        return stream.getReader();
       },
     ),
-    readStream: fromPromise<string, { stream: AsyncIterable<string> }>(
-      async ({ input }) => {
-        let result = "";
-        for await (const chunk of input.stream) {
-          result = chunk;
-        }
-        return result;
-      },
-    ),
+    readChunk: fromPromise<
+      ReadableStreamReadResult<string>,
+      { reader: ReadableStreamDefaultReader<string> }
+    >(async ({ input }) => {
+      return input.reader.read();
+    }),
   },
 }).createMachine({
   initial: "idle",
@@ -42,34 +42,55 @@ const machine = setup({
     idle: {
       on: {
         START: {
-          target: "starting",
+          target: "initializing",
         },
       },
     },
-    starting: {
+    initializing: {
       invoke: {
-        id: "getStream",
-        src: "createStream",
-        input: { prompt: "You are a conference speaker. Give a talk on airports. Use only plain text and omit all headings." },
+        src: "createReader",
+        input: {
+          prompt:
+            "You are a conference speaker. Give a talk on airports. Use only plain text and omit all headings.",
+        },
         onDone: {
-          target: "generating",
+          target: "ready",
           actions: assign({
-            stream: ({ event }) => event.output,
+            reader: ({ event }) => event.output,
           }),
         },
       },
     },
-    generating: {
+    ready: {
+      entry: raise({ type: "READ" }),
+      on: {
+        READ: {
+          target: "reading",
+        },
+      },
+    },
+    reading: {
       invoke: {
-        id: "readStream",
-        src: "readStream",
-        // @ts-expect-error stream can be undefined
-        input: ({ context }) => ({ stream: context.stream }),
+        src: "readChunk",
+        input: ({ context }) => ({ reader: context.reader! }),
         onDone: {
+          actions: [
+            assign({
+              // Only update the result if the reader returned a value
+              result: ({ event, context }) => event.output.value ?? context.result,
+            }),
+            raise(({ event }) => ({
+              type: event.output.done ? "FINISH" : "MORE",
+            })),
+          ],
+        },
+      },
+      on: {
+        MORE: {
+          target: "ready",
+        },
+        FINISH: {
           target: "idle",
-          actions: assign({
-            result: ({ event }) => event.output,
-          }),
         },
       },
     },
@@ -91,86 +112,25 @@ export interface UseFakeAiTranscriptionOptions {
 }
 
 export function useFakeAiTranscription({
-  speed,
-  prompt,
+  // speed,
+  // prompt,
   onResult,
 }: UseFakeAiTranscriptionOptions): {
   start: () => void;
   stop: () => void;
 } {
-  // const [aiSession, setAiSession] = useState<AITextSession>(null);
-
-  // useEffect(() => {
-  //   return () => {
-  //     aiSession?.destroy();
-  //   };
-  // }, [aiSession]);
-
-  // const start = useCallback(async () => {
-  //   let session: any;
-  //   if (aiSession) {
-  //     session = aiSession;
-  //   } else {
-  //     session = await window.ai.createTextSession();
-  //     setAiSession(session);
-  //   }
-
-  //   const stream: ReadableStream<string> = session.promptStreaming(prompt);
-  //   const reader = stream.getReader();
-
-  //   const next = throttle({ interval: 1000, limit: speed })(async () => {
-  //     try {
-  //       return await reader.read();
-  //     } catch (e) {
-  //       if (e instanceof DOMException && e.name === "InvalidStateError") {
-  //         // This is okay, happens when destroying the session while streaming results
-  //         return { done: true, value: undefined };
-  //       } else {
-  //         throw e;
-  //       }
-  //     }
-  //   });
-
-  //   // FIXME: sometimes this will keep running after stopping transcription
-  //   // This might be because the stream has already finished but there are still more chunks to be read
-  //   while (true) {
-  //     const { done, value: chunk } = await next();
-
-  //     if (chunk) {
-  //       const processedChunk = String(chunk).replaceAll("\n", " ");
-  //       onResult?.([
-  //         {
-  //           transcript: processedChunk,
-  //           isFinal: true,
-  //         },
-  //       ]);
-  //     }
-
-  //     if (done) break;
-  //   }
-  // }, [aiSession, prompt, speed, onResult]);
-
-  // const stop = useCallback(() => {
-  //   aiSession?.destroy();
-  //   setAiSession(null);
-  // }, [aiSession]);
-
   const [state, send] = useMachine(machine);
 
   useEffect(() => {
-    // if (state.context.result) {
-    //   const processedResult = String(state.context.result).replaceAll(
-    //     "\n",
-    //     " ",
-    //   );
-    //   onResult?.([
-    //     {
-    //       transcript: processedResult,
-    //       isFinal: true,
-    //     },
-    //   ]);
-    // }
-    console.log(state.context.result)
+    if (state.context.result) {
+      onResult?.([
+        {
+          transcript: String(state.context.result).replaceAll("\n", " "),
+          isFinal: true,
+        },
+      ]);
+    }
+    console.log(state.context.result);
   }, [state.context.result, onResult]);
 
   return {

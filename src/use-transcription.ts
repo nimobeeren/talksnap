@@ -1,4 +1,5 @@
 import { useMachine } from "@xstate/react";
+import { useCallback } from "react";
 import { assign, setup } from "xstate";
 import { useDevtoolsStore } from "./components/transcription-devtools";
 import { useFakeAiTranscription } from "./use-fake-ai-transcription";
@@ -13,9 +14,7 @@ export interface TranscriptionResult {
 }
 
 /** Maps the result of the Web Speech API to our internal interface. */
-function mapResults(
-  webResults: SpeechRecognitionResultList,
-): TranscriptionResult[] {
+function mapResults(webResults: SpeechRecognitionResultList): TranscriptionResult[] {
   return Array.from(webResults).map((result) => ({
     transcript: result.item(0).transcript,
     isFinal: result.isFinal,
@@ -86,20 +85,6 @@ export function useTranscription(): {
 } {
   const devtoolsState = useDevtoolsStore();
 
-  const { start: startWeb, stop: stopWeb } = useWebSpeechRecognition({
-    onResult: (webResults) => {
-      send({ type: "RESULTS", results: mapResults(webResults) });
-    },
-  });
-
-  const { start: startFake, stop: stopFake } = useFakeAiTranscription({
-    speed: devtoolsState.speed,
-    prompt: devtoolsState.prompt,
-    onResult: (fakeResults) => {
-      send({ type: "RESULTS", results: fakeResults });
-    },
-  });
-
   const [state, send] = useMachine(
     transcriptionMachine.provide({
       actions: {
@@ -120,6 +105,28 @@ export function useTranscription(): {
       },
     }),
   );
+
+  const handleWebResult = useCallback(
+    (webResults: SpeechRecognitionResultList) => {
+      send({ type: "RESULTS", results: mapResults(webResults) });
+    },
+    [send],
+  );
+  const { start: startWeb, stop: stopWeb } = useWebSpeechRecognition({
+    onResult: handleWebResult,
+  });
+
+  const handleFakeResult = useCallback(
+    (fakeResults: TranscriptionResult[]) => {
+      send({ type: "RESULTS", results: fakeResults });
+    },
+    [send],
+  );
+  const { start: startFake, stop: stopFake } = useFakeAiTranscription({
+    speed: devtoolsState.speed,
+    prompt: devtoolsState.prompt,
+    onResult: handleFakeResult,
+  });
 
   return {
     results: [...state.context.oldResults, ...state.context.currentResults],
