@@ -3,14 +3,17 @@ import { useEffect } from "react";
 import { assign, fromPromise, raise, setup } from "xstate";
 import { TranscriptionResult } from "./use-transcription";
 
-// TODO: use prompt
 // TODO: use speed
 // TODO: implement stop
 // TODO: maybe this should just export the machine instead of a hook?
 
 const machine = setup({
   types: {
+    input: {} as {
+      prompt: string;
+    },
     context: {} as {
+      prompt: string;
       reader?: ReadableStreamDefaultReader<string>;
       result?: string;
     },
@@ -37,6 +40,9 @@ const machine = setup({
     }),
   },
 }).createMachine({
+  context: ({ input }) => ({
+    prompt: input.prompt,
+  }),
   initial: "idle",
   states: {
     idle: {
@@ -49,10 +55,9 @@ const machine = setup({
     initializing: {
       invoke: {
         src: "createReader",
-        input: {
-          prompt:
-            "You are a conference speaker. Give a talk on airports. Use only plain text and omit all headings.",
-        },
+        input: ({ context }) => ({
+          prompt: context.prompt,
+        }),
         onDone: {
           target: "ready",
           actions: assign({
@@ -113,13 +118,17 @@ export interface UseFakeAiTranscriptionOptions {
 
 export function useFakeAiTranscription({
   // speed,
-  // prompt,
+  prompt,
   onResult,
 }: UseFakeAiTranscriptionOptions): {
   start: () => void;
   stop: () => void;
 } {
-  const [state, send] = useMachine(machine);
+  const [state, send] = useMachine(machine, { input: { prompt } });
+
+  useEffect(() => {
+    console.log(state.value);
+  }, [state.value]);
 
   useEffect(() => {
     if (state.context.result) {
