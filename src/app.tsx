@@ -6,30 +6,25 @@ import { Transcript } from "./components/transcript";
 import { TranscriptionDevtools } from "./components/transcription-devtools";
 import { Button } from "./components/ui/button";
 import { TalkingPoint } from "./types";
-import { useTranscription } from "./use-transcription";
+import { TranscriptionResult, useTranscription } from "./use-transcription";
 
 function App() {
   // Snaps are talking points that the listener wants to remember
   const [snaps, setSnaps] = useState<TalkingPoint[]>([]);
-  const [highlightedSnap, setHighlightedSnap] = useState<TalkingPoint | null>(
-    null,
-  );
+  const [highlightedSnap, setHighlightedSnap] = useState<TalkingPoint | null>(null);
+  const [state, setState] = useState<any>()
 
   const transcription = useTranscription();
+  const [transcriptinResults, setTranscriptinResults] = useState<TranscriptionResult[]>([]);
 
   const [openAiKey, setOpenAiKey] = useLocalStorage<string>(
     "openai-api-key",
     // @ts-expect-error property `env` does not exist for some reason
     import.meta.env.VITE_OPENAI_API_KEY,
   );
-  const ai = useMemo(
-    () => (openAiKey ? new AI(openAiKey) : undefined),
-    [openAiKey],
-  );
+  const ai = useMemo(() => (openAiKey ? new AI(openAiKey) : undefined), [openAiKey]);
 
-  const transcript = transcription.results
-    .map((result) => result.transcript)
-    .join("");
+  const transcript = transcription.results.map((result) => result.transcript).join("");
 
   return (
     <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
@@ -37,7 +32,7 @@ function App() {
         <div className="w-1/2 border-r border-gray-300 pr-8">
           {transcript || transcription.state === "transcribing" ? (
             <Transcript
-              transcriptionResults={transcription.results}
+              transcriptionResults={transcriptinResults}
               snaps={snaps}
               highlightedSnaps={highlightedSnap ? [highlightedSnap] : []}
               className="h-full w-full"
@@ -78,20 +73,51 @@ function App() {
         </div>
         <div className="flex gap-4">
           <Button
-            onClick={() => {
-              if (transcription.state === "transcribing") {
-                transcription.stop();
-              } else {
-                transcription.start();
+            onClick={async () => {
+              const session = await window.ai.assistant.create();
+              const stream = session.promptStreaming(
+                "You are a conference speaker. Give a talk on trains. Use only plain text and omit all headings.",
+              );
+              for await (const chunk of (stream as any)) {
+                console.log('read', chunk);
+                setState(Math.random())
               }
+              // console.log('done')
+              // const reader = stream.getReader();
+              // (window as any).reader = reader;
+              // async function read() {
+              //   console.log("starting read");
+              //   return reader
+              //     .read()
+              //     .then((result) => {
+              //       console.log("finished read", result);
+              //       return result
+              //       // if (result.value) {
+              //       //   // setTranscriptinResults([{ isFinal: true, transcript: result.value }]);
+              //       // }
+              //       // if (!result.done) {
+              //       //   read();
+              //       // }
+              //     })
+              //     .catch((e) => console.error("failed read", e));
+              // }
+              // async function readAll() {
+              //   let result = await read();
+              //   while (result && !result.done) {
+              //     result = await read();
+              //     setState(Math.random())
+              //   }
+              // }
+              // readAll();
+              // if (transcription.state === "transcribing") {
+              //   transcription.stop();
+              // } else {
+              //   transcription.start();
+              // }
             }}
-            variant={
-              transcription.state === "transcribing" ? "outline" : "default"
-            }
+            variant={transcription.state === "transcribing" ? "outline" : "default"}
           >
-            {transcription.state === "transcribing"
-              ? "Stop Transcription"
-              : "Start Transcription"}
+            {transcription.state === "transcribing" ? "Stop Transcription" : "Start Transcription"}
           </Button>
           <Button
             disabled={!ai || !transcript}
@@ -115,10 +141,7 @@ function App() {
           </Button>
         </div>
         <div className="flex grow basis-0 justify-end">
-          <ApiKeyDialog
-            apiKey={openAiKey}
-            onApiKeySubmit={(key) => setOpenAiKey(key)}
-          />
+          <ApiKeyDialog apiKey={openAiKey} onApiKeySubmit={(key) => setOpenAiKey(key)} />
         </div>
       </div>
       {process.env.NODE_ENV === "development" && <TranscriptionDevtools />}

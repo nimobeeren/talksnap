@@ -1,6 +1,6 @@
 import { useMachine } from "@xstate/react";
 import { useEffect } from "react";
-import { assign, fromPromise, raise, setup } from "xstate";
+import { assign, fromPromise, raise, setup, type ActorRef } from "xstate";
 import { TranscriptionResult } from "./use-transcription";
 
 // TODO: use speed
@@ -14,7 +14,8 @@ const machine = setup({
     },
     context: {} as {
       prompt: string;
-      reader?: ReadableStreamDefaultReader<string>;
+      // reader?: ReadableStreamDefaultReader<string>;
+      stream?: ReadableStream<string>;
       result?: string;
     },
     events: {} as
@@ -22,22 +23,41 @@ const machine = setup({
       | { type: "RESULT" }
       | { type: "FINISH" }
       | { type: "READ" }
-      | { type: "MORE" },
+      // | { type: "MORE" }
+      | { type: "CHUNK"; value: string },
   },
   actors: {
-    createReader: fromPromise<ReadableStreamDefaultReader<string>, { prompt: string }>(
+    // createReader: fromPromise<ReadableStreamDefaultReader<string>, { prompt: string }>(
+    //   async ({ input }) => {
+    //     const session = await window.ai.assistant.create();
+    //     const stream = session.promptStreaming(input.prompt);
+    //     const reader = stream.getReader();
+    //     (window as any).reader = reader;
+    //     return reader;
+    //   },
+    // ),
+    // readChunk: fromPromise<
+    //   ReadableStreamReadResult<string>,
+    //   { reader: ReadableStreamDefaultReader<string> }
+    // >(async ({ input }) => {
+    //   console.log("reading chunk");
+    //   const chunk = await input.reader.read();
+    //   console.log("finished reading chunk");
+    //   return chunk;
+    // }),
+    createStream: fromPromise<ReadableStream<string>, { prompt: string }>(async ({ input }) => {
+      const session = await window.ai.assistant.create();
+      return session.promptStreaming(input.prompt);
+    }),
+    readStream: fromPromise<void, { stream: ReadableStream<string>; parent: ActorRef<any, any> }>(
       async ({ input }) => {
-        const session = await window.ai.assistant.create();
-        const stream = session.promptStreaming(input.prompt);
-        return stream.getReader();
+        console.log("start read");
+        for await (const chunk of input.stream as unknown as AsyncIterable<string>) {
+          console.log("sending", chunk);
+          input.parent.send({ type: "CHUNK", value: chunk });
+        }
       },
     ),
-    readChunk: fromPromise<
-      ReadableStreamReadResult<string>,
-      { reader: ReadableStreamDefaultReader<string> }
-    >(async ({ input }) => {
-      return input.reader.read();
-    }),
   },
 }).createMachine({
   context: ({ input }) => ({
@@ -54,14 +74,14 @@ const machine = setup({
     },
     initializing: {
       invoke: {
-        src: "createReader",
+        src: "createStream",
         input: ({ context }) => ({
           prompt: context.prompt,
         }),
         onDone: {
           target: "ready",
           actions: assign({
-            reader: ({ event }) => event.output,
+            stream: ({ event }) => event.output,
           }),
         },
       },
@@ -76,24 +96,44 @@ const machine = setup({
     },
     reading: {
       invoke: {
-        src: "readChunk",
-        input: ({ context }) => ({ reader: context.reader! }),
+        src: "readStream",
+        input: ({ context, self }) => ({ stream: context.stream!, parent: self }),
         onDone: {
           actions: [
-            assign({
-              // Only update the result if the reader returned a value
-              result: ({ event, context }) => event.output.value ?? context.result,
+            // assign({
+            //   // Only update the result if the reader returned a value
+            //   result: ({ event, context }) => {
+            //     console.log("chunk value", event.output.value);
+            //     return event.output.value ?? context.result;
+            //   },
+            // }),
+            raise(() => {
+              // console.log("chunk done", event.output.done);
+              console.log("read done");
+              return {
+                type: "FINISH",
+              };
             }),
-            raise(({ event }) => ({
-              type: event.output.done ? "FINISH" : "MORE",
-            })),
           ],
         },
       },
       on: {
-        MORE: {
-          target: "ready",
+        CHUNK: {
+          target: "reading",
+          // LEFT HERE
+          // FIXME: having this assign action makes the stream freeze
+          actions: [
+            assign({
+              result: ({ event }) => {
+                console.log("reading", event.value);
+                return event.value;
+              },
+            }),
+          ],
         },
+        // MORE: {
+        //   target: "ready",
+        // },
         FINISH: {
           target: "idle",
         },
@@ -139,7 +179,7 @@ export function useFakeAiTranscription({
         },
       ]);
     }
-    console.log(state.context.result);
+    // console.log(state.context.result);
   }, [state.context.result, onResult]);
 
   return {
