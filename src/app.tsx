@@ -34,7 +34,7 @@ function App() {
   return (
     <div className="flex h-screen w-full flex-col items-center bg-background p-16 pb-0">
       <div className="mb-8 flex min-h-0 w-full grow text-gray-900">
-        <div className="w-1/2 border-r border-gray-300 pr-8">
+        <div className="flex w-1/2 justify-center border-r border-gray-300 pr-8">
           {transcript || transcription.state === "transcribing" ? (
             <Transcript
               transcriptionResults={transcription.results}

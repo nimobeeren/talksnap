@@ -50,7 +50,10 @@ export function Transcript({
   return (
     <div
       ref={ref}
-      className={cn("overflow-y-auto whitespace-pre-wrap", className)}
+      className={cn(
+        "max-w-[60ch] overflow-y-auto whitespace-pre-wrap",
+        className,
+      )}
     >
       {segments.map((segment, index) => {
         const isHightlighted =
